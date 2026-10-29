@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy for Selectra</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="legal.css">
+<script src="legal.js"></script>
+</head>
+<body>
+<main class="doc">
+<h1>Privacy Policy for Selectra</h1>
+<p><strong>Effective Date:</strong> September 6, 2026<br>
+<strong>Last Updated:</strong> October 28, 2026</p>
+<p>Selectra (&quot;the Extension&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains how our browser extension operates, what data is accessed, and confirms that <strong>we do not collect, store, transmit, or sell any of your personal data.</strong></p>
+<hr>
+<h2 id="s1">1. Core Commitment: Zero Data Collection</h2>
+<p>Selectra is designed with privacy as a foundational principle:</p>
+<ul>
+<li><strong>No Personal Information Collected:</strong> We do not collect names, email addresses, IP addresses, browsing history, or device identifiers.</li>
+<li><strong>No Keystroke Logging:</strong> The extension never logs or records your keystrokes or form inputs and never reads what you type. Key presses are only observed, while a feature is on, so that shortcuts keep working (see 2.4).</li>
+<li><strong>No Clipboard Snooping:</strong> When you copy text, the extension prevents malicious websites from tampering with your clipboard or injecting unwanted tracking links. It does not read, transmit, or save your clipboard contents to any external server.</li>
+<li><strong>No Remote Tracking or Analytics:</strong> The extension contains <strong>zero</strong> third-party trackers, telemetry libraries, Google Analytics, or remote tracking beacons.</li>
+<li><strong>No Remote Code Execution:</strong> All extension code is bundled locally within the extension package in full compliance with Chrome Web Store Manifest V3 guidelines.</li>
+</ul>
+<hr>
+<h2 id="s2">2. Information Handled Locally</h2>
+<p>All data processed by Selectra stays entirely within your local browser:</p>
+<h3>2.1 User Preferences &amp; Settings</h3>
+<ul>
+<li><strong>What is stored:</strong> Selected UI theme (dark/light/system), preferred interface language, the Global/This-site mode, and the feature toggles. Per-site toggles are stored under the exact host name of the site (for example <code>www.example.com</code>), for sites where you switched something on.</li>
+<li><strong>Where it is stored:</strong> On your machine, using Chrome's <code>chrome.storage.local</code> API and, for the theme and language, the local storage of the extension's own pages. In a private (incognito) window the toggles of a site are kept in memory only (<code>chrome.storage.session</code>) and are gone when the browser closes, so that no list of sites visited privately is written to your disk.</li>
+<li><strong>Data Sharing:</strong> This data never leaves your browser and is never uploaded to any remote server or cloud service. Removing the extension removes it: the browser deletes an extension's storage when it is uninstalled.</li>
+</ul>
+<h3>2.2 Images You Save (Alt+Click and &quot;Download image&quot;)</h3>
+<p>When you Alt+Click a picture or use the &quot;Download image&quot; context-menu entry, Selectra asks the browser to download that picture. This download request is made by the browser itself, exactly as any other download you start (so it carries the cookies the browser would send for that address), and Selectra refuses to start it for a private-network address (localhost, local-network addresses) when the page you are on is a public website. If the file turns out to come from a private-network address after redirects, or is not a picture (an error page, for example), it is removed again.</p>
+<p>If the picture's own server refuses the request because it carries no page address, Selectra requests the picture itself from that server, sending the address of the <strong>website you are on, without its path or query</strong> (for example <code>https://example.com/</code>), as the <code>Referer</code> header. That request made by Selectra <strong>carries no cookies or other credentials</strong>, is stopped after at most 32 MB and a short time limit, is never made to a private-network address on behalf of a public page (nor redirected into one), and its result is saved by the extension; it is not handed to the web page. A picture larger than a URL can carry is passed in pieces to the script of the frame that asked for the download, which builds a temporary file reference there; it is removed as soon as the download is over. A picture that is a vector drawing (SVG) is saved through the browser's &quot;save as&quot; dialog, because such a file can contain scripts. Nothing is sent to the developer or to any third party other than the server that hosts the picture you chose to save.</p>
+<p>To find the best version of a picture, Selectra's script in the page may load candidate picture addresses found on that page the way the page itself loads pictures; those ordinary picture requests carry whatever the browser sends for any picture on that page (including cookies and the page address).</p>
+<h3>2.3 Issue Reports</h3>
+<p>The popup's &quot;report&quot; button builds a text from the address of the page you are on (its host and path only; the query string and fragment are left out), the extension version, the list of active features and detected restrictions, your browser's user-agent string, a timestamp and the notes you type. It then copies that text to your clipboard and opens Selectra's own page in the Chrome Web Store (its Support tab) so that you can paste it there yourself. <strong>Selectra itself sends nothing anywhere</strong>: whether the text is ever submitted is entirely your decision, and the full text can be previewed in the popup before you use it. A separate &quot;copy&quot; button copies the same text without opening anything.</p>
+<h3>2.4 Page Content and Input Events (Processed Locally)</h3>
+<p>When you turn a feature on, Selectra's scripts run in the pages you visit (in every frame, except the captcha, payment and sign-in frames of a short list of services, where Selectra does not run at all) and read what they need to lift that page's restriction: the selected text, the page's links and image addresses, element styles, and which scripts have blocked right-click, selection, copying, scrolling or printing. They also watch clicks, mouse movement over images, key presses (for shortcuts such as Ctrl+C or F12) and scrolling, so that the page cannot block them. All of this happens inside your browser, only while the feature is on.</p>
+<p>Two things happen on every page, also with every feature off, and stay inside your browser: (a) so that the &quot;Download image&quot; entry of the right-click menu can be offered where a picture is under the pointer, the page's script notes where you last right-clicked and, when the pointer rests, whether a picture is under it, and passes only that yes-or-no to Selectra's background script; (b) a few passive listeners note, for the diagnosis card in the popup, that the page cancelled a copy, selection or context-menu event. Only the kind of event, and the page's own short warning messages (such as &quot;copying is disabled&quot;), are kept, in the memory of that tab, until you leave the page; never the text you selected or copied.</p>
+<p><strong>None of it is stored, logged or transmitted</strong> (your settings, described in 2.1, are the only thing Selectra keeps), apart from the actions you start yourself that are described in 2.2 and 2.3. Selectra never records what you type or what you copy.</p>
+<p>The &quot;Reading Clarity &amp; Anti-Blur&quot; switch, when on, also makes the page believe that its tab is visible and focused (it reports <code>visible</code> and swallows the events that announce that the tab was hidden or lost focus). It is part of keeping a page that blurs or hides itself readable; if you do not want a page to be unable to notice that its tab is hidden, leave that switch off.</p>
+<hr>
+<h2 id="s3">3. Chrome Web Store Permissions &amp; Why They Are Needed</h2>
+<p>Selectra requests only the minimum permissions necessary to deliver its core utility functions:</p>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>Purpose &amp; Technical Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;all_urls&gt;</code></td>
+<td>Required to inject content scripts into web pages where copy, context menu, or text selection restrictions are imposed by website scripts. The scripts are not injected into the captcha, payment and sign-in frames of a short list of services.</td>
+</tr>
+<tr>
+<td><code>declarativeNetRequestWithHostAccess</code></td>
+<td>Used only while saving an image whose host rejects requests that carry no <code>Referer</code>, and only on your request. Up to five temporary rules exist for the duration of that single request, and apply to the extension's own request only: one sets the <code>Referer</code> header for that one URL, to the origin of the page you are on; four block the request from being redirected into a private network (localhost, local names, LAN address ranges). They are removed when the request finishes. Selectra installs no permanent rules and does not inspect, log or transmit network traffic.</td>
+</tr>
+<tr>
+<td><code>downloads</code></td>
+<td>Required to save pictures you choose to download (Alt+Click on a picture, or the &quot;Download image&quot; entry of the right-click menu) when the page disables native image saving.</td>
+</tr>
+<tr>
+<td><code>storage</code></td>
+<td>Required to save your preferences (active toggles, theme, language, Global/This-site mode) locally via <code>chrome.storage.local</code> (and, in private windows, <code>chrome.storage.session</code>).</td>
+</tr>
+<tr>
+<td><code>contextMenus</code></td>
+<td>Adds three entries to the browser's right-click menu: &quot;Selectra: Toggle all&quot;, &quot;Selectra: Clean copy&quot; (when text is selected) and &quot;Selectra: Download image&quot;.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="s4">4. Third-Party Services &amp; Links</h2>
+<p>Selectra does not share data with any third-party services. The only external page the extension opens on its own is its Chrome Web Store listing (Support tab), and only when you press the report button. When you follow that link, you are subject to Google's privacy policy for the Chrome Web Store.</p>
+<h3>4.1 Fonts</h3>
+<p>The popup uses the &quot;Plus Jakarta Sans&quot; and &quot;JetBrains Mono&quot; typefaces, and &quot;Manrope&quot; for the Cyrillic letters of the Russian interface. All are included in the extension package (SIL Open Font License 1.1, see <code>fonts/OFL.txt</code>); the popup makes no request to Google Fonts or to any other server.</p>
+<h3>4.2 Icons</h3>
+<p>The interface icons come from the Feather (MIT License) and Lucide (ISC License) icon sets and are part of the extension package. Their notices are in the &quot;Open-source licenses&quot; page of the popup.</p>
+<hr>
+<h2 id="s5">5. Children's Online Privacy Protection</h2>
+<p>Selectra does not collect personal information from any user, including children under the age of 13.</p>
+<hr>
+<h2 id="s6">6. Your Rights and Who Is Responsible</h2>
+<p>The developer of Selectra, whose name and contact address are shown on the extension's Chrome Web Store listing, is the party responsible for this extension. Because Selectra collects and transmits no personal data, the developer holds none about you: there is nothing to access, correct, export or erase on the developer's side. What the extension keeps on your device (2.1) is under your control: you can reset it from the popup, and removing the extension deletes it. If you believe this description is wrong, or you want to exercise a right you have under the GDPR or the Turkish KVKK, use the contact channel below.</p>
+<hr>
+<h2 id="s7">7. Policy Changes</h2>
+<p>If we ever update this Privacy Policy, the revised version will be published with an updated &quot;Effective Date&quot;. Because we do not collect contact details, please review this policy periodically or check the release notes on the extension's Chrome Web Store listing.</p>
+<hr>
+<h2 id="s8">8. Contact Us</h2>
+<p>If you have questions, feedback, or concerns regarding this Privacy Policy or the security of Selectra, please use the <strong>Support</strong> tab of the Selectra listing in the Chrome Web Store. That is the only contact channel; the extension itself contains no e-mail address and no contact form.</p>
+</main>
+</body>
+</html>

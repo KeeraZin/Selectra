@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "Selectra - Consenti copia e clic destro"
+  },
+  "extDescription": {
+    "message": "Ripristina il clic destro, la selezione del testo e la copia nelle pagine che li bloccano. Alt+clic per salvare le immagini."
+  }
+}

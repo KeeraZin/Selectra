@@ -1,0 +1,826 @@
+/* Styles of legal/changelog.html (Selectra's "What's new" / release timeline).
+   Built on legal.css tokens + Cyber-Glass / Double-Bezel surface hierarchy from popup.css. */
+
+/* ───── Bilingual visibility ─────
+   Both languages ship in the static HTML; legal/changelog.js sets data-doc-lang synchronously before first paint. */
+.cl-tr {
+  display: none;
+}
+
+html[data-doc-lang="tr"] .cl-tr {
+  display: revert;
+}
+
+html[data-doc-lang="tr"] .cl-en {
+  display: none;
+}
+
+/* The colours are the popup's own (popup.css), value for value: the card surfaces and borders, the emerald "active" signal, the indigo accent,
+   amber and rose. css-tests compares every one of them with popup.css, so this page cannot drift away from the popup's theme. */
+[data-theme="dark"] {
+  --cl-card-bg: rgba(14, 19, 31, 0.78); /* --core-bg */
+  --cl-card-hover: rgba(20, 28, 46, 0.90); /* --core-bg-hover */
+  --cl-card-border: rgba(255, 255, 255, 0.08); /* --core-border */
+  --cl-card-border-hover: rgba(99, 102, 241, 0.38); /* --core-border-hover */
+  --cl-card-latest-border: rgba(16, 185, 129, 0.30); /* --active-shell-border */
+  --cl-new: #10b981; /* --success-text */
+  --cl-new-bg: rgba(16, 185, 129, 0.12); /* --success-pill-bg */
+  --cl-changed: #818cf8; /* --accent-text */
+  --cl-changed-bg: rgba(99, 102, 241, 0.12); /* the accent pill */
+  --cl-removed: #a3b0c4; /* --text-secondary */
+  --cl-removed-bg: rgba(148, 163, 184, 0.14);
+  --cl-fixed: #f59e0b; /* --warning-text */
+  --cl-fixed-bg: rgba(245, 158, 11, 0.12); /* --warning-pill-bg */
+  --cl-security: #f43f5e; /* --danger */
+  --cl-security-bg: rgba(244, 63, 94, 0.12);
+  --cl-latest: #10b981; /* --success-text */
+  --cl-latest-bg: rgba(16, 185, 129, 0.12); /* --success-pill-bg */
+  --cl-notice-bg: rgba(245, 158, 11, 0.12); /* --warning-pill-bg */
+  --cl-notice-line: #f59e0b; /* --warning */
+  --cl-accent: #818cf8; /* --accent-text */
+  --cl-accent-bg: rgba(99, 102, 241, 0.12); /* the accent pill */
+  --cl-highlight: rgba(255, 255, 255, 0.10); /* --core-highlight */
+}
+
+[data-theme="light"] {
+  --cl-card-bg: rgba(255, 255, 255, 0.88); /* --core-bg */
+  --cl-card-hover: rgba(255, 255, 255, 0.98); /* --core-bg-hover */
+  --cl-card-border: rgba(0, 0, 0, 0.08); /* --core-border */
+  --cl-card-border-hover: rgba(99, 102, 241, 0.35); /* --core-border-hover */
+  --cl-card-latest-border: rgba(16, 185, 129, 0.32); /* --active-shell-border */
+  --cl-new: #047857; /* --success-text */
+  --cl-new-bg: rgba(5, 150, 105, 0.10); /* --success-pill-bg */
+  --cl-changed: #4f46e5; /* --accent-text */
+  --cl-changed-bg: rgba(99, 102, 241, 0.12); /* the accent pill */
+  --cl-removed: #475569; /* --text-secondary */
+  --cl-removed-bg: rgba(100, 116, 139, 0.12);
+  --cl-fixed: #92400e; /* --warning-text */
+  --cl-fixed-bg: rgba(217, 119, 6, 0.10); /* --warning-pill-bg */
+  --cl-security: #be123c; /* --danger-secondary (the text), --danger (the tint) */
+  --cl-security-bg: rgba(217, 22, 63, 0.10);
+  --cl-latest: #047857; /* --success-text */
+  --cl-latest-bg: rgba(5, 150, 105, 0.10); /* --success-pill-bg */
+  --cl-notice-bg: rgba(217, 119, 6, 0.10); /* --warning-pill-bg */
+  --cl-notice-line: #d97706; /* --warning */
+  --cl-accent: #4f46e5; /* --accent-text */
+  --cl-accent-bg: rgba(99, 102, 241, 0.12); /* the accent pill */
+  --cl-highlight: rgba(255, 255, 255, 0.90); /* --core-highlight */
+}
+
+.doc {
+  max-width: 760px;
+}
+
+/* ───── Hero Header (Standalone Tab) & Compact Toolbar (Embedded Popup Frame) ───── */
+.cl-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cl-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.cl-hero-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--cl-accent);
+  background: var(--cl-accent-bg);
+  border: 1px solid var(--cl-card-border-hover);
+  box-shadow: inset 0 1px 0 var(--cl-highlight);
+}
+
+.cl-hero-copy {
+  min-width: 0;
+}
+
+.cl-head h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.cl-sub {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+.cl-hero-right {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cl-current-pill {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: var(--cl-card-bg);
+  border: 1px solid var(--cl-card-border);
+  color: var(--text);
+  font: 700 11px/1 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.cl-current-pill svg {
+  color: var(--accent);
+  flex: none;
+}
+
+/* EN | TR Segmented Switch */
+.cl-switch {
+  flex: none;
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  background: var(--row);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.cl-lang {
+  appearance: none;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  font: 700 10.5px/1 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  padding: 6px 9px;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.cl-lang[aria-pressed="true"] {
+  background: var(--chip);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.cl-lang:hover {
+  color: var(--text);
+}
+
+.cl-lang:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* ───── Timeline Rail & Nodes ───── */
+.cl-timeline {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 18px;
+}
+
+.cl-timeline::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 14px;
+  bottom: -10px;
+  width: 2px;
+  background: var(--line);
+  border-radius: 2px;
+}
+
+.cl-version {
+  position: relative;
+  margin: 0 0 12px;
+  padding: 0;
+  scroll-margin-top: 14px;
+}
+
+.cl-version::before {
+  content: '';
+  position: absolute;
+  left: -18px;
+  top: 15px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  z-index: 1;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.cl-version.cl-latest::before {
+  background: var(--cl-latest);
+  border-color: var(--cl-latest);
+  box-shadow: 0 0 0 3px var(--cl-latest-bg);
+}
+
+.cl-version:hover::before {
+  transform: scale(1.12);
+}
+
+/* ───── Double-Bezel Collapsible Version Cards ───── */
+.cl-card {
+  border-radius: 12px;
+  background: var(--cl-card-bg);
+  border: 1px solid var(--cl-card-border);
+  box-shadow: inset 0 1px 0 var(--cl-highlight);
+  overflow: hidden;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+[data-theme="light"] .cl-card {
+  box-shadow: inset 0 1px 0 var(--cl-highlight), 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.cl-version.cl-latest .cl-card {
+  border-color: var(--cl-card-latest-border);
+}
+
+.cl-card:hover {
+  border-color: var(--cl-card-border-hover);
+}
+
+.cl-card:not([open]):hover {
+  background: var(--cl-card-hover);
+}
+
+.cl-card-head {
+  display: block;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.cl-card-head::-webkit-details-marker {
+  display: none;
+}
+
+.cl-card-head:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 11px;
+}
+
+.cl-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cl-ver-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 7px;
+  min-width: 0;
+}
+
+.cl-ver {
+  font: 800 13.5px/1.25 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.cl-latest-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--cl-latest-bg);
+  color: var(--cl-latest);
+  font: 700 10px/1.3 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cl-date-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-2);
+  font: 500 10.5px/1.3 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.cl-date-meta svg {
+  flex: none;
+  opacity: 0.8;
+}
+
+.cl-rel:not(:empty)::before {
+  content: '\00B7';
+  margin-right: 4px;
+  opacity: 0.7;
+}
+
+.cl-card-actions {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cl-total-pill {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--text-2);
+  font: 700 10px/1.2 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.cl-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-2);
+  transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1), color 0.16s ease;
+}
+
+.cl-card:hover .cl-chevron {
+  color: var(--text);
+}
+
+.cl-card[open] .cl-chevron {
+  transform: rotate(180deg);
+}
+
+.cl-title {
+  display: block;
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.cl-card:not([open]) .cl-title {
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+/* ───── Expanded Card Body ───── */
+.cl-card-body {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--line);
+}
+
+.cl-summary {
+  margin: 0 0 11px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+/* Migration / Behavioral Notice Callout */
+.cl-notice {
+  margin: 0 0 13px;
+  padding: 9px 11px;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  border-left: 3px solid var(--cl-notice-line);
+  border-radius: 8px;
+  background: var(--cl-notice-bg);
+}
+
+.cl-notice-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+  color: var(--cl-fixed);
+}
+
+.cl-notice-head svg {
+  flex: none;
+}
+
+.cl-notice-label {
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.cl-notice-body {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ───── Grouped Categories & Hanging Colored Dots ───── */
+.cl-group {
+  margin-top: 13px;
+}
+
+.cl-group:first-child,
+.cl-summary+.cl-group,
+.cl-notice+.cl-group {
+  margin-top: 0;
+}
+
+.cl-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 7px;
+  font: 700 10.5px/1.3 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cl-group-icon {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.cl-group-count {
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.cl-group-new .cl-group-head {
+  color: var(--cl-new);
+}
+
+.cl-group-new .cl-group-count {
+  color: var(--cl-new);
+  background: var(--cl-new-bg);
+}
+
+.cl-group-new .cl-dot {
+  background: var(--cl-new);
+}
+
+.cl-group-changed .cl-group-head {
+  color: var(--cl-changed);
+}
+
+.cl-group-changed .cl-group-count {
+  color: var(--cl-changed);
+  background: var(--cl-changed-bg);
+}
+
+.cl-group-changed .cl-dot {
+  background: var(--cl-changed);
+}
+
+.cl-group-fixed .cl-group-head {
+  color: var(--cl-fixed);
+}
+
+.cl-group-fixed .cl-group-count {
+  color: var(--cl-fixed);
+  background: var(--cl-fixed-bg);
+}
+
+.cl-group-fixed .cl-dot {
+  background: var(--cl-fixed);
+}
+
+.cl-group-security .cl-group-head {
+  color: var(--cl-security);
+}
+
+.cl-group-security .cl-group-count {
+  color: var(--cl-security);
+  background: var(--cl-security-bg);
+}
+
+.cl-group-security .cl-dot {
+  background: var(--cl-security);
+}
+
+.cl-group-removed .cl-group-head {
+  color: var(--cl-removed);
+}
+
+.cl-group-removed .cl-group-count {
+  color: var(--cl-removed);
+  background: var(--cl-removed-bg);
+}
+
+.cl-group-removed .cl-dot {
+  background: var(--cl-removed);
+}
+
+.cl-changes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.cl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+}
+
+.cl-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-top: 7px;
+}
+
+.cl-item-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.cl-item-text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ───── Timeline Origin Marker ───── */
+.cl-origin {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 0 18px;
+  color: var(--text-2);
+  font: 500 11px/1.4 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.cl-origin-dot {
+  position: absolute;
+  left: 1px;
+  top: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+  border: 2px solid var(--bg);
+}
+
+/* ───── Embedded Popup Viewer Adaptation (html.in-frame, ~312px wide) ─────
+   #legalModal already renders the modal header & icon; keep only a slim single-row language toolbar inside the iframe. */
+html.in-frame .doc {
+  padding: 8px 10px 18px;
+}
+
+html.in-frame .cl-head {
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+}
+
+html.in-frame .cl-hero-icon,
+html.in-frame .cl-sub,
+html.in-frame .cl-current-pill {
+  display: none;
+}
+
+html.in-frame .cl-head h1 {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0;
+}
+
+html.in-frame .cl-lang {
+  padding: 4px 7px;
+  font-size: 10px;
+}
+
+html.in-frame .cl-timeline {
+  padding-left: 14px;
+}
+
+html.in-frame .cl-timeline::before {
+  left: 3px;
+}
+
+html.in-frame .cl-version {
+  margin-bottom: 8px;
+}
+
+html.in-frame .cl-version::before {
+  left: -14px;
+  top: 13px;
+  width: 8px;
+  height: 8px;
+}
+
+html.in-frame .cl-card {
+  border-radius: 10px;
+}
+
+html.in-frame .cl-card-head {
+  padding: 8px 10px;
+}
+
+html.in-frame .cl-card-body {
+  padding: 9px 10px 11px;
+}
+
+html.in-frame .cl-ver {
+  font-size: 12.5px;
+}
+
+html.in-frame .cl-title {
+  font-size: 11.5px;
+  margin-top: 3px;
+}
+
+html.in-frame .cl-summary {
+  font-size: 11.5px;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+html.in-frame .cl-notice {
+  padding: 7px 9px;
+  margin-bottom: 10px;
+}
+
+html.in-frame .cl-notice-label {
+  font-size: 11px;
+}
+
+html.in-frame .cl-notice-body {
+  font-size: 11.5px;
+  line-height: 1.44;
+}
+
+html.in-frame .cl-item-text {
+  font-size: 12px;
+  line-height: 1.48;
+}
+
+html.in-frame .cl-dot {
+  width: 5px;
+  height: 5px;
+  margin-top: 6.5px;
+}
+
+html.in-frame .cl-origin {
+  padding-left: 14px;
+  font-size: 10.5px;
+}
+
+html.in-frame .cl-origin-dot {
+  left: 0;
+}
+
+/* ───── Wide Standalone Tab (>= 640px) ───── */
+@media (min-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+
+  .doc {
+    padding: 36px 28px 72px;
+  }
+
+  .cl-head {
+    margin-bottom: 28px;
+    padding-bottom: 22px;
+    align-items: center;
+  }
+
+  .cl-hero-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .cl-head h1 {
+    font-size: 24px;
+  }
+
+  .cl-sub {
+    font-size: 13.5px;
+  }
+
+  .cl-current-pill {
+    display: inline-flex;
+  }
+
+  .cl-timeline {
+    padding-left: 24px;
+  }
+
+  .cl-timeline::before {
+    left: 5px;
+  }
+
+  .cl-version {
+    margin-bottom: 14px;
+  }
+
+  .cl-version::before {
+    left: -23px;
+    top: 18px;
+    width: 10px;
+    height: 10px;
+  }
+
+  .cl-card-head {
+    padding: 15px 18px;
+  }
+
+  .cl-card-body {
+    padding: 15px 18px 18px;
+  }
+
+  .cl-ver {
+    font-size: 14.5px;
+  }
+
+  .cl-title {
+    font-size: 13.5px;
+    margin-top: 5px;
+  }
+
+  .cl-summary {
+    font-size: 13.5px;
+    margin-bottom: 13px;
+  }
+
+  .cl-notice {
+    padding: 11px 14px;
+    margin-bottom: 15px;
+  }
+
+  .cl-notice-label {
+    font-size: 12px;
+  }
+
+  .cl-notice-body {
+    font-size: 12.5px;
+  }
+
+  .cl-group {
+    margin-top: 16px;
+  }
+
+  .cl-group-head {
+    font-size: 11px;
+    margin-bottom: 9px;
+  }
+
+  .cl-changes {
+    gap: 8px;
+  }
+
+  .cl-item-text {
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  .cl-dot {
+    margin-top: 8px;
+  }
+
+  .cl-origin {
+    padding-left: 24px;
+    font-size: 11.5px;
+  }
+
+  .cl-origin-dot {
+    left: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .cl-lang,
+  .cl-version::before,
+  .cl-card,
+  .cl-chevron {
+    transition: none !important;
+  }
+}

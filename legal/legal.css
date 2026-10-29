@@ -1,0 +1,132 @@
+/* Shared styling of the legal pages (privacy.html, licenses.html), shown in the popup's viewer and in a tab.
+   Palette = popup.css tokens, so the pages match the popup's dark/light theme. Written to read well at ~340px. */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #07090e;
+  --text: #f8fafc;
+  --text-2: #a3b0c4;
+  --line: rgba(255, 255, 255, 0.10);
+  --chip: rgba(255, 255, 255, 0.07);
+  --row: rgba(255, 255, 255, 0.03);
+  --accent: #818cf8;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f6f8fc;
+  --text: #0f172a;
+  --text-2: #475569;
+  --line: rgba(0, 0, 0, 0.12);
+  --chip: rgba(0, 0, 0, 0.06);
+  --row: rgba(0, 0, 0, 0.028);
+  --accent: #4f46e5;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { background: var(--bg); }
+
+/* Slim translucent scrollbar (matches popup.css so embedded legal frames never show a chunky OS scrollbar) */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.26); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.46); }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.doc {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 18px 18px 40px;
+}
+
+h1, h2, h3 { line-height: 1.25; letter-spacing: -0.015em; text-wrap: balance; }
+h1 { margin: 0 0 14px; font-size: 20px; font-weight: 800; }
+h2 { margin: 26px 0 8px; font-size: 14.5px; font-weight: 700; scroll-margin-top: 12px; }
+h3 { margin: 18px 0 6px; font-size: 13px; font-weight: 700; color: var(--text); }
+
+p, ul { margin: 0 0 10px; }
+p { color: var(--text-2); text-wrap: pretty; }
+strong { color: var(--text); font-weight: 700; }
+
+ul { padding-left: 18px; color: var(--text-2); }
+li { margin: 0 0 6px; padding-left: 2px; }
+li::marker { color: var(--accent); }
+
+hr { margin: 18px 0; border: 0; border-top: 1px solid var(--line); }
+
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+code {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--chip);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+table {
+  width: 100%;
+  margin: 8px 0 14px;
+  border-collapse: collapse;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+th, td { padding: 8px 9px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+th { color: var(--text); font-weight: 700; background: var(--row); }
+td { color: var(--text-2); }
+tbody tr:last-child td { border-bottom: 0; }
+td:first-child { width: 38%; }
+
+pre {
+  margin: 10px 0 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--row);
+  color: var(--text-2);
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 640px) {
+  body { font-size: 15px; }
+  .doc { padding: 40px 24px 80px; }
+  h1 { font-size: 28px; }
+  h2 { font-size: 18px; }
+  h3 { font-size: 15px; }
+  code { font-size: 12.5px; }
+  table { font-size: 14px; }
+  pre { font-size: 12px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* A narrow window (the popup's viewer is 336 px wide): a table row becomes a block, so no word is broken in the middle of a column */
+@media (max-width: 420px) {
+  table, tbody, tr, td { display: block; width: 100%; }
+  thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } /* still read by screen readers */
+  tr { padding: 6px 0; border-bottom: 1px solid var(--line); }
+  td, td:first-child { width: 100%; padding: 2px 9px; border-bottom: 0; }
+  td:first-child { color: var(--text); font-weight: 600; }
+}

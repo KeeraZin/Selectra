@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "Selectra - Permitir copiar e clique direito"
+  },
+  "extDescription": {
+    "message": "Recupere o clique direito, a seleção de texto e a cópia em páginas que os bloqueiam. Alt+clique salva as imagens."
+  }
+}

@@ -1,0 +1,10 @@
+# local output
+node_modules/
+*.log
+# the store package is built (scripts/build-zip.ps1) and attached to a release, not committed
+/selectra-cws.zip
+# what an operating system or an editor leaves behind
+Thumbs.db
+.DS_Store
+desktop.ini
+*.swp

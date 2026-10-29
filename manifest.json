@@ -1,0 +1,95 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "short_name": "Selectra",
+  "version": "1.0.11",
+  "default_locale": "en",
+  "description": "__MSG_extDescription__",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'self';"
+  },
+  "minimum_chrome_version": "111",
+  "permissions": [
+    "storage",
+    "downloads",
+    "contextMenus",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Selectra",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "exclude_matches": [
+        "https://challenges.cloudflare.com/*",
+        "https://*.hcaptcha.com/*",
+        "https://www.google.com/recaptcha/*",
+        "https://www.recaptcha.net/recaptcha/*",
+        "https://*.arkoselabs.com/*",
+        "https://*.funcaptcha.com/*",
+        "https://*.stripe.com/*",
+        "https://*.stripe.network/*",
+        "https://*.paypal.com/*",
+        "https://pay.google.com/*",
+        "https://payments.google.com/*",
+        "https://*.adyen.com/*",
+        "https://*.braintreegateway.com/*",
+        "https://accounts.google.com/*",
+        "https://login.microsoftonline.com/*",
+        "https://login.live.com/*",
+        "https://appleid.apple.com/*"
+      ],
+      "js": ["content-main.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true,
+      "match_about_blank": true,
+      "match_origin_as_fallback": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "exclude_matches": [
+        "https://challenges.cloudflare.com/*",
+        "https://*.hcaptcha.com/*",
+        "https://www.google.com/recaptcha/*",
+        "https://www.recaptcha.net/recaptcha/*",
+        "https://*.arkoselabs.com/*",
+        "https://*.funcaptcha.com/*",
+        "https://*.stripe.com/*",
+        "https://*.stripe.network/*",
+        "https://*.paypal.com/*",
+        "https://pay.google.com/*",
+        "https://payments.google.com/*",
+        "https://*.adyen.com/*",
+        "https://*.braintreegateway.com/*",
+        "https://accounts.google.com/*",
+        "https://login.microsoftonline.com/*",
+        "https://login.live.com/*",
+        "https://appleid.apple.com/*"
+      ],
+      "js": ["shared.js", "image-rules.js", "image-engine.js", "content.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true,
+      "match_origin_as_fallback": true
+    }
+  ]
+}

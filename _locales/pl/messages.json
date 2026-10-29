@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "Selectra - Zezwól na kopiowanie i prawy przycisk"
+  },
+  "extDescription": {
+    "message": "Przywraca prawy przycisk myszy, zaznaczanie tekstu i kopiowanie na stronach, które je blokują. Alt+klik zapisuje obrazy."
+  }
+}

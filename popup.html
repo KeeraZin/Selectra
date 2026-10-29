@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Selectra</title>
+  <!-- What this page may load, in addition to the extension's own policy (manifest.json, which the service worker shares and which must stay open for its fetches) -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <link rel="stylesheet" href="fonts/fonts.css">
+  <script src="theme-init.js"></script>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo" aria-hidden="true">
+        <img src="icon48.png" width="32" height="32" alt="Selectra">
+      </div>
+      <div class="header-text">
+        <h1 data-i18n="appName">Selectra</h1>
+      </div>
+    </div>
+    <div class="header-right">
+      <!-- 10-Language Custom Dropdown Popover -->
+      <div class="lang-picker-wrapper">
+        <button class="icon-btn lang-btn" id="langToggle" data-i18n-title="langToggleTitle" data-i18n-aria="langToggleTitle" aria-haspopup="listbox" aria-expanded="false" aria-controls="langList">
+          <span id="langText">EN</span>
+          <svg class="lang-chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <div class="lang-popover" id="langPopover">
+          <div class="lang-list" id="langList" role="listbox" data-i18n-aria="langListLabel">
+            <!-- Rendered dynamically by popup.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Switcher with SVG Morph & Circular Reveal -->
+      <button class="icon-btn theme-btn" id="themeToggle" data-i18n-title="themeToggleTitle" data-i18n-aria="themeToggleTitle">
+        <span class="theme-icon-wrap" aria-hidden="true">
+          <svg class="theme-icon moon-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg class="theme-icon sun-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+          </svg>
+        </span>
+      </button>
+
+      <!-- Feedback & Bug Report Button -->
+      <button class="icon-btn contact-btn" id="contactHeaderBtn" data-i18n-title="contactTitle" data-i18n-aria="contactTitle">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Active Page Content -->
+  <div id="activeContent">
+    <!-- Segmented Mode Control -->
+    <div class="mode-bar-container">
+    <div class="domain-row">
+      <svg class="domain-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+      <span class="domain-badge" id="domainBadge" data-i18n="badgeActiveTab">Active tab</span>
+    </div>
+    <div class="segmented-control" role="radiogroup" data-i18n-aria="modeGroupLabel">
+      <button class="segment-btn active" id="modeSiteBtn" role="radio" aria-checked="true" data-i18n="modeSite">This site</button>
+      <button class="segment-btn" id="modeGlobalBtn" role="radio" aria-checked="false" data-i18n="modeGlobal">Global</button>
+    </div>
+  </div>
+
+  <!-- Global mode is browser-wide: it pauses every site's own settings, so say so while it is on -->
+  <p class="mode-hint" id="globalModeHint" hidden data-i18n="globalModeHint">Global mode applies to every site. Each site’s own settings are paused until you switch back to “This site”.</p>
+
+  <!-- Shown when the page never loaded Selectra (opened before an update, PDF viewer, ...): the settings are saved but cannot reach it -->
+  <div class="notice-card" id="pageNotReadyNotice" role="alert" hidden>
+    <p class="notice-text" data-i18n="pageNotReady">Selectra isn’t running on this page yet. Reload the page to apply your settings.</p>
+    <button type="button" class="notice-btn" id="pageNotReadyReload" data-i18n="btnReloadPage">Reload Page</button>
+  </div>
+
+  <!-- Live Barrier Scanner Card -->
+  <div class="diagnosis-card" id="diagnosisCard">
+    <div class="diagnosis-header">
+      <span class="diagnosis-dot"></span>
+      <span class="diagnosis-title" id="diagnosisTitle" data-i18n="scannerTitle">Protection Diagnosis</span>
+    </div>
+    <div class="diagnosis-body" id="diagnosisBody" data-i18n="scannerClean">No restrictions detected on this page</div>
+    <div class="barrier-tags" id="barrierTags"></div>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar" role="status" aria-live="polite">
+    <div class="status-indicator">
+      <span class="status-dot"></span>
+      <span class="status-text" id="statusText" data-i18n="statusAllOff">All controls off</span>
+    </div>
+    <span class="active-count" id="activeCount">0 active</span>
+  </div>
+
+  <!-- Hero Master Action Bar -->
+  <div class="quick-actions-bar">
+    <button class="hero-btn unlock-btn" id="quickAllBtn" type="button">
+      <span class="btn-icon-circle">
+        <svg class="hero-bolt-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      </span>
+      <span id="quickAllText" data-i18n="btnUnlockAll">Unlock All</span>
+    </button>
+
+    <button class="reload-btn" id="reloadTabBtn" type="button" data-i18n-title="btnReloadPage" data-i18n-aria="btnReloadPage">
+      <svg class="reload-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Main Controls List -->
+  <main class="controls-section">
+    <!-- Group 1: Core Unlockers -->
+    <div class="section-label" data-i18n="secUnlockers">Core Unlockers</div>
+
+    <div class="control-card" data-key="rightClick">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
+          <path d="M13 13l6 6"></path>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titleRightClick" data-i18n="featRightClickTitle">Right Click</div>
+        <div class="card-desc" id="descRightClick" data-i18n="featRightClickDesc">Restore right-click context menus</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" role="switch" id="rightClickToggle" aria-labelledby="titleRightClick" aria-describedby="descRightClick">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <div class="control-card" data-key="copy">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="8" y="8" width="13" height="13" rx="2"></rect>
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titleCopy" data-i18n="featCopyTitle">Text Selection and Copy</div>
+        <div class="card-desc" id="descCopy" data-i18n="featCopyDesc">Bypass CSS and JavaScript copy blocks</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" role="switch" id="copyToggle" aria-labelledby="titleCopy" aria-describedby="descCopy">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <div class="control-card" data-key="clipboard">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="m9 12 2 2 4-4"></path>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titleClipboard" data-i18n="featClipboardTitle">Clipboard Protection</div>
+        <div class="card-desc" id="descClipboard" data-i18n="featClipboardDesc">Stop websites from adding links or credits to copied text</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" role="switch" id="clipboardToggle" aria-labelledby="titleClipboard" aria-describedby="descClipboard">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <div class="control-card" data-key="keyboard">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+          <line x1="6" y1="8" x2="6.01" y2="8"></line>
+          <line x1="10" y1="8" x2="10.01" y2="8"></line>
+          <line x1="14" y1="8" x2="14.01" y2="8"></line>
+          <line x1="18" y1="8" x2="18.01" y2="8"></line>
+          <line x1="7" y1="16" x2="17" y2="16"></line>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titleKeyboard" data-i18n="featKeyboardTitle">Keyboard Shortcuts</div>
+        <div class="card-desc" id="descKeyboard" data-i18n="featKeyboardDesc">Keep F12, developer tools, view source, and save working</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" role="switch" id="keyboardToggle" aria-labelledby="titleKeyboard" aria-describedby="descKeyboard">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <!-- Group 2: Media & Downloads -->
+    <div class="section-label" data-i18n="secMedia">Media and Downloads</div>
+
+    <div class="control-card" data-key="dragDrop">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titleDragDrop" data-i18n="featDragDropTitle">Direct Image Drag</div>
+        <div class="card-desc" id="descDragDrop" data-i18n="featDragDropDesc">Drag images straight to your desktop as files</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" role="switch" id="dragDropToggle" aria-labelledby="titleDragDrop" aria-describedby="descDragDrop">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <div class="control-card" data-key="altClick">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titleAltClick" data-i18n="featAltClickTitle">Alt-Click Quick Download</div>
+        <div class="card-desc" id="descAltClick" data-i18n="featAltClickDesc">Hold Alt and click any image to save it immediately</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" role="switch" id="altClickToggle" aria-labelledby="titleAltClick" aria-describedby="descAltClick">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <!-- Group 3: Page Tools -->
+    <div class="section-label" data-i18n="secPageTools">Page Tools</div>
+
+    <div class="control-card" data-key="scrollbar">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="8 7 12 3 16 7"></polyline>
+          <polyline points="8 17 12 21 16 17"></polyline>
+          <line x1="12" y1="3" x2="12" y2="21"></line>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titleScrollbar" data-i18n="featScrollbarTitle">Scroll Restoration</div>
+        <div class="card-desc" id="descScrollbar" data-i18n="featScrollbarDesc">Restore hidden or locked page scrolling</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" role="switch" id="scrollbarToggle" aria-labelledby="titleScrollbar" aria-describedby="descScrollbar">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <div class="control-card" data-key="alert">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titleAlert" data-i18n="featAlertTitle">Block Protection Popups</div>
+        <div class="card-desc" id="descAlert" data-i18n="featAlertDesc">Silence copy-warning alert boxes and overlays</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" role="switch" id="alertToggle" aria-labelledby="titleAlert" aria-describedby="descAlert">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <div class="control-card" data-key="antiBlur">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titleAntiBlur" data-i18n="featAntiBlurTitle">Reading Clarity & Anti-Blur</div>
+        <div class="card-desc" id="descAntiBlur" data-i18n="featAntiBlurDesc">Restore text sharpness and readability on obscured pages</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" role="switch" id="antiBlurToggle" aria-labelledby="titleAntiBlur" aria-describedby="descAntiBlur">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <div class="control-card" data-key="print">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 6 2 18 2 18 9"></polyline>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+          <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titlePrint" data-i18n="featPrintTitle">Print Unlock</div>
+        <div class="card-desc" id="descPrint" data-i18n="featPrintDesc">Make pages that block printing printable</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" role="switch" id="printToggle" aria-labelledby="titlePrint" aria-describedby="descPrint">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <div class="control-card" data-key="edit">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titleEdit" data-i18n="featEditTitle">Page Editor</div>
+        <div class="card-desc" id="descEdit" data-i18n="featEditDesc">Make page text directly editable in place</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" role="switch" id="editToggle" aria-labelledby="titleEdit" aria-describedby="descEdit">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-row">
+      <div class="footer-status-badge">
+        <span class="status-pulse-dot" aria-hidden="true"></span>
+        <span class="footer-status-label" data-i18n="footerText">Selectra</span>
+        <span class="footer-version-tag">v1.0.11</span>
+      </div>
+      <div class="footer-actions">
+        <button id="contactBtn" class="footer-chip-btn" type="button">
+          <svg class="chip-svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span data-i18n="btnContact">Report Issue</span>
+        </button>
+        <button id="resetBtn" class="footer-chip-btn danger" type="button" data-i18n-title="resetTitle">
+          <svg class="chip-svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          <span data-i18n="btnReset">Reset</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Legal row: opens the packaged policy pages in the viewer below (a plain link, so "open in new tab" also works) -->
+    <nav class="legal-row" data-i18n-aria="legalNavLabel" aria-label="Legal information">
+      <a class="legal-link" href="legal/privacy.html" data-legal="privacy" data-i18n="legalPrivacy">Privacy Policy</a>
+      <span class="legal-sep" aria-hidden="true"></span>
+      <a class="legal-link" href="legal/licenses.html" data-legal="licenses" data-i18n="legalLicenses">Open-source licenses</a>
+      <span class="legal-sep" aria-hidden="true"></span>
+      <a class="legal-link" href="legal/changelog.html" data-legal="changelog" data-i18n="legalChangelog">What’s new</a>
+    </nav>
+  </footer>
+  </div>
+  <!-- /#activeContent -->
+
+  <!-- Disabled System Screen (Preserves Header with Language & Theme Controls) -->
+  <div class="disabled-message" id="disabledView" role="region" aria-live="polite">
+    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+    </svg>
+    <p id="disabledMessageText" data-i18n="unsupportedPage">Extension cannot run on this system page.</p>
+    <!-- Global mode is browser-wide: it has to be possible to leave it from a page the extension cannot run on, too -->
+    <button type="button" class="notice-btn" id="disabledGlobalOff" hidden data-i18n="btnGlobalOff">Turn off Global mode</button>
+  </div>
+
+  <!-- Contact / Report Issue Modal (High-End Precision UI) -->
+  <div class="modal-backdrop" id="contactModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle">
+    <div class="modal-card">
+      <!-- Ambient Top Specular Light -->
+      <div class="modal-ambient-glow" aria-hidden="true"></div>
+
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title" id="contactModalTitle" data-i18n="contactTitle">Report Issue / Contact</h3>
+            <p class="modal-desc" data-i18n="contactDesc">Found a locked site or bug? Let us know.</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="contactModalClose" type="button" data-i18n-aria="legalClose">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Live Telemetry Inspector Bar -->
+        <div class="modal-telemetry-strip">
+          <div class="telemetry-site-group">
+            <span class="telemetry-beacon" id="contactTelemetryDot" aria-hidden="true"></span>
+            <span class="telemetry-site-val" id="contactSiteDomain">example.com</span>
+          </div>
+          <div class="telemetry-badge-group">
+            <span class="telemetry-status-pill" id="contactTelemetryPill">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span id="contactBarrierCountText" data-i18n="contactLivePage">Live page</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Issue Category Segmented Control (High-Tactile Cards with Micro-Icons) -->
+        <div class="contact-category-group" role="radiogroup" data-i18n-aria="issueCategoryLabel">
+          <label class="category-chip active" data-cat="locked">
+            <input type="radio" name="issueCategory" value="locked" checked>
+            <span class="chip-icon" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+              </svg>
+            </span>
+            <span class="chip-text" data-i18n="catSiteLocked">Site locked</span>
+          </label>
+          <label class="category-chip" data-cat="bug">
+            <input type="radio" name="issueCategory" value="bug">
+            <span class="chip-icon" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+              </svg>
+            </span>
+            <span class="chip-text" data-i18n="catBug">Bug / Glitch</span>
+          </label>
+          <label class="category-chip" data-cat="feature">
+            <input type="radio" name="issueCategory" value="feature">
+            <span class="chip-icon" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </span>
+            <span class="chip-text" data-i18n="catFeature">Feature idea</span>
+          </label>
+        </div>
+
+        <!-- Notes / Details Input with Double-Bezel Shell -->
+        <div class="contact-input-wrap">
+          <div class="contact-label-row">
+            <label for="contactMessage" class="contact-input-label" data-i18n="contactNotesLabel">Notes / Details</label>
+            <span class="contact-optional-tag" data-i18n="contactOptionalTag">Optional</span>
+          </div>
+          <div class="textarea-shell">
+            <textarea id="contactMessage" class="contact-textarea" rows="3" placeholder="What happened on this website?" data-i18n-placeholder="contactNotesPlaceholder"></textarea>
+          </div>
+        </div>
+
+        <!-- Expandable Telemetry Accordion (Developer-Grade Transparency) -->
+        <details class="telemetry-accordion" id="telemetryAccordion">
+          <summary class="telemetry-summary">
+            <span class="telemetry-summary-left">
+              <svg class="telemetry-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+              <span data-i18n="contactTelemetryDetails">Diagnostics included</span>
+            </span>
+            <span class="telemetry-chip-code" id="telemetrySnippetBadge">v1.0.11</span>
+          </summary>
+          <div class="telemetry-details-body">
+            <pre class="telemetry-code" id="telemetryCodePreview">Loading diagnostics...</pre>
+          </div>
+        </details>
+
+        <!-- The popup closes when the store tab opens, so what to do there has to be said BEFORE the click -->
+        <p class="contact-support-hint" id="contactSupportHint" data-i18n="contactSupportHint">Copies the report and opens the store’s support page. There, press “Contact the developer” and paste (Ctrl+V).</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-modal secondary" id="copyDiagnosticsBtn" type="button">
+          <span class="btn-icon-wrap" id="copyDiagnosticsIconWrap">
+            <svg class="icon-copy" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <svg class="icon-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </span>
+          <span id="copyDiagnosticsLabel" data-i18n="btnCopyDiagnostics">Copy Diagnostics</span>
+        </button>
+
+        <button class="btn-modal primary" id="sendReportBtn" type="button">
+          <span class="btn-label" data-i18n="btnOpenSupport">Copy &amp; open support</span>
+          <span class="btn-icon-bubble" aria-hidden="true">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legal viewer: shows legal/privacy.html, legal/licenses.html or legal/changelog.html (packaged with the extension) inside the popup -->
+  <div class="modal-backdrop" id="legalModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="legalModalTitle">
+    <div class="modal-card legal-card">
+      <div class="modal-ambient-glow" aria-hidden="true"></div>
+
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge" aria-hidden="true">
+            <svg data-legal-icon="privacy" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <svg data-legal-icon="licenses" hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <svg data-legal-icon="changelog" hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+              <path d="M20 3v4"/>
+              <path d="M22 5h-4"/>
+              <path d="M4 17v2"/>
+              <path d="M5 18H3"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title" id="legalModalTitle">Privacy Policy</h3>
+            <p class="modal-desc" data-i18n="legalEnglishOnly">The full text is in English.</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="legalModalClose" type="button" data-i18n-aria="legalClose" aria-label="Close">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body legal-body">
+        <iframe id="legalFrame" class="legal-frame" title="Privacy Policy"></iframe>
+      </div>
+
+      <div class="modal-footer legal-footer">
+        <a id="legalOpenTab" class="btn-modal secondary" href="legal/privacy.html" target="_blank" rel="noopener" data-i18n="legalOpenTab">Open in new tab</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script src="i18n.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

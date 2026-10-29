@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Selectra - Allow Copy & Right Click",
+    "description": "Name of the extension in the Chrome Web Store and in the browser. Keep the brand name \"Selectra\"; translate only what follows it. Maximum 75 characters."
+  },
+  "extDescription": {
+    "message": "Bring back right-click, text selection and copying on pages that block them. Hold Alt and click to save images.",
+    "description": "Short description shown under the name in the Chrome Web Store. Maximum 132 characters."
+  }
+}

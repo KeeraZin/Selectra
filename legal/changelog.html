@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Selectra: What's new</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="legal.css">
+<link rel="stylesheet" href="changelog.css">
+<script src="legal.js"></script>
+<script src="changelog.js"></script>
+</head>
+<body>
+<main class="doc">
+<header class="cl-head">
+<div class="cl-hero-left">
+<div class="cl-hero-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg></div>
+<div class="cl-hero-copy">
+<h1><span class="cl-en" lang="en">What's new in Selectra</span><span class="cl-tr" lang="tr">Selectra'da yenilikler</span></h1>
+<p class="cl-sub"><span class="cl-en" lang="en">Release history, improvements, and security updates</span><span class="cl-tr" lang="tr">Sürüm geçmişi, iyileştirmeler ve güvenlik güncellemeleri</span></p>
+</div>
+</div>
+<div class="cl-hero-right">
+<span class="cl-current-pill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>v1.0.11</span></span>
+<div class="cl-switch" role="group" aria-label="Language / Dil">
+<button type="button" class="cl-lang" data-lang="en" aria-pressed="true">EN</button>
+<button type="button" class="cl-lang" data-lang="tr" aria-pressed="false">TR</button>
+</div>
+</div>
+</header>
+<ol class="cl-timeline">
+<li class="cl-version cl-latest" id="v1.0.11">
+<details class="cl-card" open>
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.11</span>
+<span class="cl-latest-badge"><span class="cl-en" lang="en">Latest</span><span class="cl-tr" lang="tr">Güncel</span></span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-29">2026-10-29</time><span class="cl-rel" data-date="2026-10-29"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">11</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Hardened Downloads, Exact-Site Mode &amp; Print Unlock</span><span class="cl-tr" lang="tr">İndirme Güvenliği, Tam Alan Adı Modu ve Yazdırma Kilidi</span></span>
+</summary>
+<div class="cl-card-body">
+<p class="cl-summary"><span class="cl-en" lang="en">Security and reliability release: hardened image downloads, isolated script bridge, exact per-site settings, and improved web-app compatibility.</span><span class="cl-tr" lang="tr">Güvenlik ve güvenilirlik sürümü: görsel indirme doğrulaması, betik izolasyonu, tam alan adı ayarları ve web uygulaması uyumluluğu güçlendirildi.</span></p>
+<div class="cl-notice" role="note"><div class="cl-notice-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><strong class="cl-notice-label"><span class="cl-en" lang="en">Good to know</span><span class="cl-tr" lang="tr">Bilmeniz gerekenler</span></strong></div><p class="cl-notice-body"><span class="cl-en" lang="en">Settings saved by older versions under a parent domain (such as <code>example.com</code>) no longer carry over to subdomains (<code>www.example.com</code>). Subdomains start clean once; existing records are preserved.</span><span class="cl-tr" lang="tr">Eski sürümlerin üst alan adı (örneğin <code>example.com</code>) altına kaydettiği ayarlar artık alt alan adlarına (<code>www.example.com</code>) otomatik uygulanmaz. Alt alan adları bir defaya mahsus varsayılan durumla başlar; mevcut kayıtlar silinmez.</span></p></div>
+<section class="cl-group cl-group-new">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">New Features</span><span class="cl-tr" lang="tr">Yeni Özellikler</span></span><span class="cl-group-count">2</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Print Unlock:</strong> Added as a dedicated toggle in the popup. Restores blocked printing while preserving the page layout as shown on screen, without stripping headers or menus.</span><span class="cl-tr" lang="tr"><strong>Print Unlock (Yazdırma Kilidi):</strong> Popup'a bağımsız bir anahtar olarak eklendi. Menü veya başlıkları gizlemeden, sayfayı ekranda göründüğü haliyle yazdırmayı etkinleştirir.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>What's New:</strong> Added an interactive bilingual release timeline directly in the popup footer.</span><span class="cl-tr" lang="tr"><strong>Yenilikler:</strong> Popup altbilgisine tüm sürümlerin geçmişini İngilizce ve Türkçe sunan etkileşimli sürüm notları eklendi.</span></div></li>
+</ul>
+</section>
+<section class="cl-group cl-group-changed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Improvements</span><span class="cl-tr" lang="tr">İyileştirmeler</span></span><span class="cl-group-count">4</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Exact &quot;This Site&quot; Mode:</strong> Per-site settings now apply strictly to the active hostname without falling back to global defaults or a parent domain. Resetting affects only that hostname.</span><span class="cl-tr" lang="tr"><strong>Tam &quot;Bu Site&quot; Modu:</strong> Siteye özel ayarlar artık genel varsayılanlara veya üst alan adına düşmeden yalnızca ilgili tam alan adına uygulanır; sıfırlama yalnızca o siteyi etkiler.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Zero Overhead When Idle:</strong> Page observers stay completely inactive when all toggles are off, and private windows keep site settings strictly in memory.</span><span class="cl-tr" lang="tr"><strong>Kapalıyken Sıfır Yük:</strong> Tüm anahtarlar kapalıyken sayfada hiçbir izleyici çalıştırılmaz; gizli pencereler site ayarlarını diske yazmadan yalnızca bellekte tutar.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Privacy Policy &amp; Licenses:</strong> Updated documentation to reflect every local permission and packaged asset accurately.</span><span class="cl-tr" lang="tr"><strong>Gizlilik Politikası ve Lisanslar:</strong> Tüm yerel izinleri ve paket içi bileşenleri birebir yansıtacak şekilde güncellendi.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Store Listing in 11 Languages:</strong> The short description is rewritten in plain words for every store language, and the store screenshots are rebuilt per language: the real popup in that language next to text that reads naturally, with headlines that wrap cleanly.</span><span class="cl-tr" lang="tr"><strong>11 Dilde Mağaza Sayfası:</strong> Kısa açıklama her mağaza dilinde sade bir dille yeniden yazıldı; ekran görüntüleri dil dil yenilendi: o dildeki gerçek popup, doğal okunan metin ve düzgün kırılan başlıklarla.</span></div></li>
+</ul>
+</section>
+<section class="cl-group cl-group-fixed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Bug Fixes</span><span class="cl-tr" lang="tr">Hata Düzeltmeleri</span></span><span class="cl-group-count">2</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Rich Editors &amp; Sensitive Frames:</strong> Code editors and web apps retain full control over their own selection, clipboard, and keyboard shortcuts. Payment, sign-in, and CAPTCHA frames remain untouched.</span><span class="cl-tr" lang="tr"><strong>Zengin Editörler ve Hassas Çerçeveler:</strong> Kod editörleri ve web uygulamaları kendi seçim, pano ve kısayol davranışlarını korur. Ödeme, oturum açma ve CAPTCHA çerçevelerine müdahale edilmez.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Accessibility &amp; Typography:</strong> Added accessible switch labels, modal focus trapping, WCAG AA contrast across both themes, language-aware plurals, and bundled Cyrillic font support for Russian.</span><span class="cl-tr" lang="tr"><strong>Erişilebilirlik ve Tipografi:</strong> Anahtar etiketleri, pencere odak kilidi, her iki temada WCAG AA kontrast uyumu, dile duyarlı çoğul ekleri ve Rusça için yerleşik Kiril yazı tipi eklendi.</span></div></li>
+</ul>
+</section>
+<section class="cl-group cl-group-security">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Security</span><span class="cl-tr" lang="tr">Güvenlik</span></span><span class="cl-group-count">2</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Verified Image Downloads:</strong> Restricted downloads strictly to image MIME types, re-validated final redirect destinations, and prompted for a save location on ambiguous SVG files.</span><span class="cl-tr" lang="tr"><strong>Doğrulanmış Görsel İndirmeleri:</strong> İndirmeler yalnızca görsel dosya türleriyle sınırlandırıldı; yönlendirme sonrası nihai adres denetimi ve uzantısı belirsiz SVG dosyaları için kayıt yeri onayı eklendi.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Isolated Script Bridge:</strong> Rebuilt the communication channel between isolated and main-world scripts so untrusted page scripts cannot forge messages to disable protections.</span><span class="cl-tr" lang="tr"><strong>İzole Betik Köprüsü:</strong> İzole dünya ile sayfa dünyası arasındaki iletişim kanalı yenilendi; web sayfalarının sahte mesaj göndererek korumaları devre dışı bırakması engellendi.</span></div></li>
+</ul>
+</section>
+<section class="cl-group cl-group-removed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Removed</span><span class="cl-tr" lang="tr">Kaldırılanlar</span></span><span class="cl-group-count">1</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Site-Specific Selectors:</strong> Removed domain-targeted rules in favor of universal, standards-based unlocker heuristics across all websites.</span><span class="cl-tr" lang="tr"><strong>Siteye Özgü Seçiciler:</strong> Belirli sitelere yönelik kurallar kaldırıldı; tüm kilit açıcılar artık her sitede aynı evrensel kurallarla çalışır.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.10">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.10</span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-28">2026-10-28</time><span class="cl-rel" data-date="2026-10-28"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">5</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Precision Anti-Blur, Protected Image Downloads &amp; Theme Polish</span><span class="cl-tr" lang="tr">Hassas Anti-Blur, Korumalı Görsel İndirme ve Tema İyileştirmeleri</span></span>
+</summary>
+<div class="cl-card-body">
+<p class="cl-summary"><span class="cl-en" lang="en">Smarter blur detection for modern web apps, reliable context-menu image saving, and flicker-free theme transitions.</span><span class="cl-tr" lang="tr">Modern web uygulamaları için akıllı bulanıklık tespiti, güvenilir sağ tık görsel kaydetme ve pürüzsüz tema geçişleri.</span></p>
+<section class="cl-group cl-group-changed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Improvements</span><span class="cl-tr" lang="tr">İyileştirmeler</span></span><span class="cl-group-count">1</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Version Display &amp; Store Visuals:</strong> Full semantic version number shown in the popup footer alongside localized store previews.</span><span class="cl-tr" lang="tr"><strong>Sürüm Gösterimi ve Mağaza Görselleri:</strong> Popup altbilgisinde tam sürüm numarası gösterimi ve çok dilli mağaza önizlemeleri güncellendi.</span></div></li>
+</ul>
+</section>
+<section class="cl-group cl-group-fixed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Bug Fixes</span><span class="cl-tr" lang="tr">Hata Düzeltmeleri</span></span><span class="cl-group-count">4</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Anti-Blur Precision:</strong> Preserves decorative backdrop blur and gradients on modern AI and glassmorphic web apps, unblurring only obscured readable content and restoring exact original styles when toggled off.</span><span class="cl-tr" lang="tr"><strong>Hassas Anti-Blur:</strong> Modern yapay zeka ve cam efektli arayüzlerdeki dekoratif bulanıklıkları ve gradyanları bozmaz; yalnızca okunması engellenen içeriği netleştirir ve kapatıldığında sayfayı eski haline döndürür.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Context-Menu Image Download:</strong> Reliably extracts images behind transparent overlays, CSS backgrounds, <code>&lt;canvas&gt;</code> elements, and <code>blob:</code> URLs with clear status feedback. Also fixed &quot;Clean Copy&quot; and &quot;Toggle All&quot; synchronization.</span><span class="cl-tr" lang="tr"><strong>Sağ Tık Görsel İndirme:</strong> Saydam katman arkasındaki görsellerde, CSS arka planlarında, <code>&lt;canvas&gt;</code> öğelerinde ve <code>blob:</code> adreslerinde kararlı çalışır ve işlem durumunu bildirir. &quot;Temiz Kopya&quot; ve &quot;Tümünü Aç/Kapat&quot; eşitlemesi de düzeltildi.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Flicker-Free Theme Toggle:</strong> Rapid theme switches register without dropped clicks or dark-frame flashes during view transitions.</span><span class="cl-tr" lang="tr"><strong>Pürüzsüz Tema Geçişi:</strong> Hızlı tema değişimleri eksiksiz algılanır; geçiş sırasındaki anlık ekran kararması giderildi.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Scroll Lock Detection:</strong> Prevented temporary loading states from leaving pages permanently marked as scroll-unlocked.</span><span class="cl-tr" lang="tr"><strong>Kaydırma Kilidi Tespiti:</strong> Sayfa yüklenirken oluşan geçici durumların kaydırma kilidini kalıcı olarak açık bırakması önlendi.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.9">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.9</span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-22">2026-10-22</time><span class="cl-rel" data-date="2026-10-22"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">3</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Subdomain Settings Isolation &amp; Mode Switching</span><span class="cl-tr" lang="tr">Alt Alan Adı İzolasyonu ve Mod Geçişi</span></span>
+</summary>
+<div class="cl-card-body">
+<section class="cl-group cl-group-fixed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Bug Fixes</span><span class="cl-tr" lang="tr">Hata Düzeltmeleri</span></span><span class="cl-group-count">3</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Subdomain Isolation:</strong> Different subdomains under the same root domain no longer overwrite one another's toggle states.</span><span class="cl-tr" lang="tr"><strong>Alt Alan Adı Ayrımı:</strong> Aynı kök alan adına bağlı farklı alt sitelerin birbirinin ayarlarını ezmesi engellendi.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Clean Mode Switching:</strong> Switching between &quot;This Site&quot; and &quot;Global&quot; updates only the active scope without duplicating stored settings.</span><span class="cl-tr" lang="tr"><strong>Temiz Mod Geçişi:</strong> &quot;Bu Site&quot; ve &quot;Global&quot; modları arasında geçiş yapmak artık ayar kopyası oluşturmadan yalnızca aktif kapsamı değiştirir.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Banner Spacing:</strong> Corrected vertical spacing between the domain bar and the inactive-page status card.</span><span class="cl-tr" lang="tr"><strong>Kart Boşluğu:</strong> Alan adı çubuğu ile pasif sayfa uyarı kartı arasındaki dikey boşluk düzeltildi.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.8">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.8</span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-22">2026-10-22</time><span class="cl-rel" data-date="2026-10-22"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">2</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Restricted Browser Pages &amp; Diagnostic Feedback</span><span class="cl-tr" lang="tr">Kısıtlı Tarayıcı Sayfaları ve Sorun Bildirimi</span></span>
+</summary>
+<div class="cl-card-body">
+<section class="cl-group cl-group-fixed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Bug Fixes</span><span class="cl-tr" lang="tr">Hata Düzeltmeleri</span></span><span class="cl-group-count">2</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Restricted Page Detection:</strong> Recognizes extension stores and internal browser URLs (<code>chrome://</code>, <code>brave://</code>, <code>opera://</code>, <code>devtools://</code>), displaying a clear explanation instead of an ineffective reload prompt.</span><span class="cl-tr" lang="tr"><strong>Kısıtlı Sayfa Tespiti:</strong> Eklenti mağazaları ve tarayıcı iç sayfaları (<code>chrome://</code>, <code>brave://</code>, <code>opera://</code>, <code>devtools://</code>) tanınarak işlevsiz &quot;sayfayı yenile&quot; uyarısı yerine net bir bilgilendirme gösterilir.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Problem Reporter Feedback:</strong> Confirms clipboard copy with a visible &quot;Copied!&quot; state before opening the support page.</span><span class="cl-tr" lang="tr"><strong>Sorun Bildirimi Onayı:</strong> Destek sayfası açılmadan önce raporun panoya kopyalandığını doğrulayan &quot;Kopyalandı!&quot; bildirimi gösterilir.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.7">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.7</span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-22">2026-10-22</time><span class="cl-rel" data-date="2026-10-22"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">3</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Real-Input Protection Testing &amp; Computed Anti-Blur</span><span class="cl-tr" lang="tr">Gerçek Girdi Testleri ve Hesaplanmış Anti-Blur</span></span>
+</summary>
+<div class="cl-card-body">
+<section class="cl-group cl-group-changed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Improvements</span><span class="cl-tr" lang="tr">İyileştirmeler</span></span><span class="cl-group-count">1</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>End-to-End Verification:</strong> Verified all unlockers against real-world content restrictions using hardware-level mouse and keyboard events.</span><span class="cl-tr" lang="tr"><strong>Uçtan Uca Doğrulama:</strong> Tüm kilit açıcılar gerçek fare ve klavye olaylarıyla koruma tekniklerine karşı doğrulandı.</span></div></li>
+</ul>
+</section>
+<section class="cl-group cl-group-fixed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Bug Fixes</span><span class="cl-tr" lang="tr">Hata Düzeltmeleri</span></span><span class="cl-group-count">2</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Computed Blur Analysis:</strong> Reading Clarity &amp; Anti-Blur evaluates actual rendered styles rather than fragile CSS class names, cleanly reverting changes when disabled.</span><span class="cl-tr" lang="tr"><strong>Hesaplanmış Bulanıklık Analizi:</strong> Okuma Netliği ve Anti-Blur, kırılgan sınıf adları yerine sayfanın gerçek boyama stillerini analiz eder ve kapatıldığında değişiklikleri temizce geri alır.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Resilient Text Selection:</strong> Neutralizes late-bound selection blockers and transparent <code>::selection</code> color overrides.</span><span class="cl-tr" lang="tr"><strong>Dayanıklı Metin Seçimi:</strong> Sonradan devreye giren seçim engelleyici betikler ve görünmez <code>::selection</code> renkleri etkisiz hale getirildi.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.6">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.6</span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-22">2026-10-22</time><span class="cl-rel" data-date="2026-10-22"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">3</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Dynamic Frame Coverage &amp; Narrower Host Permissions</span><span class="cl-tr" lang="tr">Dinamik Çerçeve Desteği ve Daraltılmış İzinler</span></span>
+</summary>
+<div class="cl-card-body">
+<section class="cl-group cl-group-new">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">New Features</span><span class="cl-tr" lang="tr">Yeni Özellikler</span></span><span class="cl-group-count">1</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Dynamic Frames:</strong> Extended unlocker coverage into dynamically generated <code>about:blank</code>, <code>srcdoc</code>, <code>data:</code>, and <code>blob:</code> iframes.</span><span class="cl-tr" lang="tr"><strong>Dinamik Çerçeveler:</strong> Sayfaların çalışma anında oluşturduğu <code>about:blank</code>, <code>srcdoc</code>, <code>data:</code> ve <code>blob:</code> çerçeveleri için destek eklendi.</span></div></li>
+</ul>
+</section>
+<section class="cl-group cl-group-changed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Improvements</span><span class="cl-tr" lang="tr">İyileştirmeler</span></span><span class="cl-group-count">1</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Narrower Network Permission:</strong> Migrated from <code>declarativeNetRequest</code> to <code>declarativeNetRequestWithHostAccess</code>, eliminating the broad content-blocking install warning.</span><span class="cl-tr" lang="tr"><strong>Daraltılmış Ağ İzni:</strong> <code>declarativeNetRequest</code> yerine daha dar kapsamlı <code>declarativeNetRequestWithHostAccess</code> iznine geçilerek kurulumdaki geniş kapsamlı uyarı kaldırıldı.</span></div></li>
+</ul>
+</section>
+<section class="cl-group cl-group-fixed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Bug Fixes</span><span class="cl-tr" lang="tr">Hata Düzeltmeleri</span></span><span class="cl-group-count">1</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Top-Frame Diagnostics:</strong> Popup status checks now query the top-level frame reliably instead of child iframes.</span><span class="cl-tr" lang="tr"><strong>Üst Çerçeve Teşhisi:</strong> Popup durum sorgularının alt çerçeveler yerine doğrudan ana çerçeveden yanıt alması sağlandı.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.5">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.5</span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-22">2026-10-22</time><span class="cl-rel" data-date="2026-10-22"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">1</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Multilingual Store Presence (11 Languages)</span><span class="cl-tr" lang="tr">Çok Dilli Mağaza Desteği (11 Dil)</span></span>
+</summary>
+<div class="cl-card-body">
+<section class="cl-group cl-group-new">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">New Features</span><span class="cl-tr" lang="tr">Yeni Özellikler</span></span><span class="cl-group-count">1</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>11-Language Store Listing:</strong> Localized extension name, short summary, and Web Store listing across 11 browser languages.</span><span class="cl-tr" lang="tr"><strong>11 Dilde Mağaza Sayfası:</strong> Eklenti adı, kısa açıklama ve mağaza sayfası tarayıcı diline uyum sağlayacak şekilde 11 dile çevrildi.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.4">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.4</span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-22">2026-10-22</time><span class="cl-rel" data-date="2026-10-22"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">3</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Embedded Frame Inheritance &amp; Live Toggle Sync</span><span class="cl-tr" lang="tr">Gömülü Çerçeve Uyumu ve Canlı Anahtar Eşitlemesi</span></span>
+</summary>
+<div class="cl-card-body">
+<section class="cl-group cl-group-changed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Improvements</span><span class="cl-tr" lang="tr">İyileştirmeler</span></span><span class="cl-group-count">1</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Post-Update Reload Prompt:</strong> Detects tabs opened prior to an extension update and offers a one-click page reload, with clearer Global mode descriptions.</span><span class="cl-tr" lang="tr"><strong>Güncelleme Sonrası Yenileme Uyarısı:</strong> Güncellemeden önce açılmış sekmeleri algılayıp tek tıkla sayfa yenileme sunar; Global mod açıklaması netleştirildi.</span></div></li>
+</ul>
+</section>
+<section class="cl-group cl-group-fixed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Bug Fixes</span><span class="cl-tr" lang="tr">Hata Düzeltmeleri</span></span><span class="cl-group-count">2</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Embedded Frame Settings:</strong> Child iframes now inherit the active configuration of the host site they are embedded in.</span><span class="cl-tr" lang="tr"><strong>Gömülü Çerçeve Ayarları:</strong> Sayfa içi çerçevelerin, gömülü oldukları ana sitenin aktif ayarlarını izlemesi sağlandı.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Toggle All Accuracy:</strong> &quot;Toggle All&quot; now reads the live runtime state of the active page before switching.</span><span class="cl-tr" lang="tr"><strong>Tümünü Aç/Kapat Doğruluğu:</strong> &quot;Tümünü Aç/Kapat&quot; düğmesi artık geçiş yapmadan önce sayfanın gerçek çalışma durumunu baz alır.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.3">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.3</span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-22">2026-10-22</time><span class="cl-rel" data-date="2026-10-22"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">3</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Cryptographic Bridge Token &amp; CSP Hardening</span><span class="cl-tr" lang="tr">Kriptografik Köprü Anahtarı ve CSP Sertleştirmesi</span></span>
+</summary>
+<div class="cl-card-body">
+<section class="cl-group cl-group-security">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Security</span><span class="cl-tr" lang="tr">Güvenlik</span></span><span class="cl-group-count">3</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Authenticated Script Channel:</strong> Protected cross-world script messages with a per-document cryptographic token.</span><span class="cl-tr" lang="tr"><strong>Doğrulanmış Betik İletişimi:</strong> Betikler arası mesajlaşma sayfa başına üretilen tahmin edilemez anahtarla koruma altına alındı.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Strict Extension CSP:</strong> Applied a locked-down Content Security Policy across packaged extension pages.</span><span class="cl-tr" lang="tr"><strong>Sıkı Eklenti Güvenlik Politikası:</strong> Tüm eklenti sayfalarına katı İçerik Güvenlik Politikası (CSP) uygulandı.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Background Download Validation:</strong> Added background-worker MIME checks and filename sanitization for image download requests.</span><span class="cl-tr" lang="tr"><strong>Arka Plan İndirme Denetimi:</strong> İndirme istekleri için arka plan servisinde görsel doğrulaması ve güvenli dosya adı temizliği eklendi.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.2">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.2</span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-22">2026-10-22</time><span class="cl-rel" data-date="2026-10-22"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">1</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Local Network &amp; Private IP Download Protection</span><span class="cl-tr" lang="tr">Yerel Ağ ve Özel IP İndirme Koruması</span></span>
+</summary>
+<div class="cl-card-body">
+<section class="cl-group cl-group-security">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Security</span><span class="cl-tr" lang="tr">Güvenlik</span></span><span class="cl-group-count">1</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>SSRF &amp; LAN Guard:</strong> Blocked Referer-assisted image download requests targeting <code>localhost</code> or private LAN addresses before dispatch.</span><span class="cl-tr" lang="tr"><strong>Yerel Ağ Koruması:</strong> Sayfa Referer bilgisi kullanan görsel indirmelerinin <code>localhost</code> veya yerel ağ (LAN) adreslerine yönlendirilmesi istek başlamadan engellendi.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.1">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.1</span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-22">2026-10-22</time><span class="cl-rel" data-date="2026-10-22"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">1</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Guided Support &amp; Diagnostic Report Flow</span><span class="cl-tr" lang="tr">Yönlendirmeli Destek ve Sorun Bildirimi Akışı</span></span>
+</summary>
+<div class="cl-card-body">
+<section class="cl-group cl-group-fixed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Bug Fixes</span><span class="cl-tr" lang="tr">Hata Düzeltmeleri</span></span><span class="cl-group-count">1</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>One-Click Problem Report:</strong> Copies diagnostic details to the clipboard before opening the Web Store support tab, with step-by-step guidance in 10 languages.</span><span class="cl-tr" lang="tr"><strong>Tek Tıkla Sorun Bildirimi:</strong> Tanılama raporu önce panoya kopyalanır, ardından mağaza destek sekmesi açılarak 10 dilde adım adım yönlendirme sunulur.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.0">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.0</span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-22">2026-10-22</time><span class="cl-rel" data-date="2026-10-22"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">1</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">First public release</span><span class="cl-tr" lang="tr">İlk genel sürüm</span></span>
+</summary>
+<div class="cl-card-body">
+<section class="cl-group cl-group-new">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">New Features</span><span class="cl-tr" lang="tr">Yeni Özellikler</span></span><span class="cl-group-count">1</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Initial Launch:</strong> First public release of Selectra on the Chrome Web Store with core text, clipboard, context-menu, scroll, and visual unlockers.</span><span class="cl-tr" lang="tr"><strong>İlk Yayın:</strong> Selectra; metin seçimi, pano, sağ tık menüsü, kaydırma ve görsel kilit açıcı çekirdeğiyle Chrome Web Store'da yayınlandı.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+</ol>
+<footer class="cl-origin"><span class="cl-origin-dot" aria-hidden="true"></span><span class="cl-origin-text"><span class="cl-en" lang="en">Initial public release — Selectra v1.0.0</span><span class="cl-tr" lang="tr">İlk genel sürüm — Selectra v1.0.0</span></span></footer>
+</main>
+</body>
+</html>

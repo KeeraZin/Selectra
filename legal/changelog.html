@@ -21,7 +21,7 @@
 </div>
 </div>
 <div class="cl-hero-right">
-<span class="cl-current-pill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>v1.0.11</span></span>
+<span class="cl-current-pill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>v1.0.12</span></span>
 <div class="cl-switch" role="group" aria-label="Language / Dil">
 <button type="button" class="cl-lang" data-lang="en" aria-pressed="true">EN</button>
 <button type="button" class="cl-lang" data-lang="tr" aria-pressed="false">TR</button>
@@ -29,13 +29,37 @@
 </div>
 </header>
 <ol class="cl-timeline">
-<li class="cl-version cl-latest" id="v1.0.11">
+<li class="cl-version cl-latest" id="v1.0.12">
 <details class="cl-card" open>
 <summary class="cl-card-head">
 <span class="cl-card-top">
 <span class="cl-ver-row">
-<span class="cl-ver">v1.0.11</span>
+<span class="cl-ver">v1.0.12</span>
 <span class="cl-latest-badge"><span class="cl-en" lang="en">Latest</span><span class="cl-tr" lang="tr">Güncel</span></span>
+<span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-29">2026-10-29</time><span class="cl-rel" data-date="2026-10-29"></span></span>
+</span>
+<span class="cl-card-actions"><span class="cl-total-pill">2</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>
+</span>
+<span class="cl-title"><span class="cl-en" lang="en">Web-App Scrolling &amp; Download-Name Fixes</span><span class="cl-tr" lang="tr">Web Uygulaması Kaydırma ve İndirme Adı Düzeltmeleri</span></span>
+</summary>
+<div class="cl-card-body">
+<p class="cl-summary"><span class="cl-en" lang="en">Two compatibility fixes: web apps that scroll inside their own panes are left alone, and other extensions' downloads keep the file names they asked for.</span><span class="cl-tr" lang="tr">İki uyumluluk düzeltmesi: kendi panelleri içinde kayan web uygulamalarına dokunulmuyor ve diğer eklentilerin indirmeleri istedikleri dosya adlarını koruyor.</span></p>
+<section class="cl-group cl-group-fixed">
+<h3 class="cl-group-head"><span class="cl-group-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></span><span class="cl-group-label"><span class="cl-en" lang="en">Bug Fixes</span><span class="cl-tr" lang="tr">Hata Düzeltmeleri</span></span><span class="cl-group-count">2</span></h3>
+<ul class="cl-changes">
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Web Apps Keep Their Layout:</strong> Scroll Restoration no longer mistakes a web app that scrolls inside its own panes (a mail client, for example) for a locked page: its top bar and side menus stay where they are, and the popup stops reporting &quot;Scroll locked&quot; for it.</span><span class="cl-tr" lang="tr"><strong>Web Uygulamalarının Düzeni Bozulmuyor:</strong> Scroll Restoration, kendi panelleri içinde kayan bir web uygulamasını (örneğin bir e-posta istemcisini) kilitli sayfa sanmıyor: üst çubuk ve yan menüler yerinde kalıyor, popup da bunun için artık &quot;Kaydırma kilitli&quot; demiyor.</span></div></li>
+<li class="cl-item"><span class="cl-dot" aria-hidden="true"></span><div class="cl-item-text"><span class="cl-en" lang="en"><strong>Other Extensions' Downloads Keep Their Names:</strong> Selectra now takes part in naming a download only while it is saving a picture itself. Before, it could replace the file names other extensions asked for, and made download managers show a &quot;failed to name the download&quot; warning.</span><span class="cl-tr" lang="tr"><strong>Diğer Eklentilerin İndirmeleri Adlarını Koruyor:</strong> Selectra artık bir indirmenin adına yalnızca kendi resim kaydı sırasında karışıyor. Daha önce başka eklentilerin istediği dosya adlarını geçersiz kılabiliyor ve indirme yöneticilerinde &quot;failed to name the download&quot; uyarısına yol açabiliyordu.</span></div></li>
+</ul>
+</section>
+</div>
+</details>
+</li>
+<li class="cl-version" id="v1.0.11">
+<details class="cl-card">
+<summary class="cl-card-head">
+<span class="cl-card-top">
+<span class="cl-ver-row">
+<span class="cl-ver">v1.0.11</span>
 <span class="cl-date-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><time class="cl-date" datetime="2026-10-29">2026-10-29</time><span class="cl-rel" data-date="2026-10-29"></span></span>
 </span>
 <span class="cl-card-actions"><span class="cl-total-pill">11</span><span class="cl-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span></span>

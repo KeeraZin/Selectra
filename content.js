@@ -451,6 +451,106 @@
     }
   }
 
+  // ─── Is a page's scrolling taken away, or is it an app that scrolls inside its own panes? ───
+  // One answer for the scroll unlocker (ScrollbarFeature) and for the popup's "Scroll locked" diagnosis, measured on the page as the PAGE styled it.
+  //
+  // A page is locked when its document would scroll (its own content is taller than the window) but the page forbade it: overflow hidden on <html> or
+  // <body>, or a <body> frozen with position: fixed. Two things are NOT a lock, although `scrollHeight` alone says so:
+  //  - what sits outside the flow. A mail client or a chat leaves menus parked far below its window and layers waiting for the next screen; they count
+  //    in scrollHeight, yet the page itself fits its window. Only the page's flow (and the boxes of <html> and <body>) counts as content here.
+  //  - an app whose big pane scrolls by itself (a message list). Its document is meant to stay still. Turning scrolling on and letting `height: auto`
+  //    loose made the percentage-sized panes grow to their whole content, so the page scrolled as a whole and its top bar was gone (SCN5c, SCN5d).
+  const ScrollLock = {
+    SLACK: 15, // px; what a window and a page may differ by without anything being cut off
+
+    /** The lowest edge of the page's own flow in document coordinates: the boxes of <html> and <body> and their children in the flow (not positioned out of it). */
+    flowBottom(html, body) {
+      const scrollY = window.scrollY || 0;
+      let bottom = Math.max(html.getBoundingClientRect().bottom, body.getBoundingClientRect().bottom) + scrollY;
+      const children = body.children;
+      for (let i = 0; i < Math.min(children.length, 60); i++) {
+        const rect = this.flowRectOf(children[i]);
+        if (rect) bottom = Math.max(bottom, rect.bottom + scrollY);
+      }
+      return bottom;
+    },
+
+    /** The box of an element that takes part in the flow and shows something, or null (hidden, positioned out of the flow, empty). */
+    flowRectOf(el) {
+      if (!(el instanceof Element)) return null;
+      const style = getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.position === 'fixed' || style.position === 'absolute') return null;
+      const rect = el.getBoundingClientRect();
+      return rect.height > 0 ? rect : null;
+    },
+
+    /** Does something IN the flow of this container reach below it? (what is only positioned there does not count) */
+    flowOverflows(container) {
+      const edge = container.getBoundingClientRect().bottom + this.SLACK + 5;
+      for (let i = 0; i < Math.min(container.children.length, 60); i++) {
+        const rect = this.flowRectOf(container.children[i]);
+        if (rect && rect.bottom > edge) return true;
+      }
+      return false;
+    },
+
+    /** Does a pane that covers a good part of the window scroll by itself? Looked for on and above whatever lies under a few points of the window. */
+    hasScrollingPane(html, body, within = null) {
+      const width = window.innerWidth || html.clientWidth;
+      const height = window.innerHeight || html.clientHeight;
+      const seen = new Set();
+      for (const [fx, fy] of [[0.5, 0.5], [0.5, 0.25], [0.5, 0.75], [0.25, 0.5], [0.75, 0.5]]) {
+        let stack = [];
+        try { stack = document.elementsFromPoint(Math.round(width * fx), Math.round(height * fy)); } catch {}
+        for (const start of stack) {
+          for (let el = start; el instanceof Element && el !== body && el !== html && !seen.has(el); el = el.parentElement) {
+            seen.add(el);
+            if (within && !within.contains(el)) continue;
+            const overflowY = getComputedStyle(el).overflowY;
+            if ((overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') &&
+                el.scrollHeight > el.clientHeight + 20 && el.clientHeight >= height * 0.4 && el.clientWidth >= width * 0.4) return true;
+          }
+        }
+      }
+      return false;
+    },
+
+    /** What the page does with its scrolling. Call it with this script's own override classes off. */
+    measure(html, body) {
+      const htmlStyle = getComputedStyle(html);
+      const bodyStyle = getComputedStyle(body);
+      const viewportHeight = window.innerHeight || html.clientHeight;
+
+      // everything the document holds, positioned outside the flow too (this decides whether a scrollbar is worth showing)
+      let held = Math.max(html.scrollHeight, body.scrollHeight);
+      for (let i = 0; i < Math.min(body.children.length, 30); i++) {
+        const child = body.children[i];
+        if (child instanceof Element && child.tagName !== 'SCRIPT' && child.tagName !== 'STYLE') held = Math.max(held, child.offsetTop + (child.offsetHeight || 0));
+      }
+      const holdsMore = held > viewportHeight + this.SLACK;
+
+      const hidden = (style) => style.overflowY === 'hidden' || style.overflowY === 'clip';
+      const overflowHidden = hidden(htmlStyle) || hidden(bodyStyle);
+      const bodyFixed = bodyStyle.position === 'fixed';
+      // Computed height is never the string '100%', so clamping is measured: the body box is no taller than the window while its content is.
+      const clamped = overflowHidden && body.scrollHeight > body.clientHeight + this.SLACK && body.clientHeight <= viewportHeight + 1;
+
+      let locked = holdsMore && bodyFixed; // a frozen <body> (a modal's mobile trick): its content is the page
+      if (!locked && holdsMore && overflowHidden && this.flowBottom(html, body) > viewportHeight + this.SLACK) {
+        locked = !this.hasScrollingPane(html, body); // not an app whose own pane does the scrolling
+      }
+      return { locked, clamped, holdsMore, bodyFixed };
+    },
+
+    /** A wrapper element that clips more of its own flow than it shows (and holds no big pane that scrolls by itself). */
+    containerLocked(container, html, body) {
+      const overflowY = getComputedStyle(container).overflowY;
+      if (overflowY !== 'hidden' && overflowY !== 'clip') return false;
+      if (container.scrollHeight <= container.clientHeight + 20) return false;
+      return this.flowOverflows(container) && !this.hasScrollingPane(html, body, container);
+    }
+  };
+
   // ─── COPY PROTECTION PATTERNS & UTILS ───
   const COPY_MESSAGE_PATTERNS = [
     'kopyalayamazsın',
@@ -934,15 +1034,8 @@
               diagnosis.hasSelectionLock = true;
             }
 
-            // 4. Scroll Lock Check
-            const scrollHeight = Math.max(html.scrollHeight, body.scrollHeight);
-            const viewportHeight = window.innerHeight || html.clientHeight;
-            if (
-              scrollHeight > viewportHeight + 20 &&
-              (htmlStyle.overflowY === 'hidden' || bodyStyle.overflowY === 'hidden' || bodyStyle.position === 'fixed')
-            ) {
-              diagnosis.hasScrollLock = true;
-            }
+            // 4. Scroll Lock Check: the same answer the scroll unlocker acts on (an app that scrolls inside its own panes is not a locked page)
+            if (ScrollLock.measure(html, body).locked) diagnosis.hasScrollLock = true;
           }
 
           // 5. Blur: text that is really blurred or masked (decided from the computed style, like the unlocker itself; a class name proves
@@ -2088,42 +2181,32 @@
       const OVERRIDES = ['su-scroll-unlocked', 'su-scroll-unlocked-height', 'su-scroll-fixed-restored'];
       const hadOnHtml = OVERRIDES.filter(c => html.classList.contains(c));
       const hadOnBody = OVERRIDES.filter(c => body.classList.contains(c));
+      // the containers this script forced open are measured as the page styled them too: a forced one would otherwise look like a pane that scrolls by itself
+      const hadForced = Array.from(document.querySelectorAll('.su-container-unlocked'));
       html.classList.remove(...OVERRIDES);
       body.classList.remove(...OVERRIDES);
+      hadForced.forEach(el => el.classList.remove('su-container-unlocked'));
 
       let blocked, isHeightClamped, hasScrollablePage, bodyFixed, savedTop;
+      const lockedContainers = [];
       try {
-        const htmlStyle = getComputedStyle(html);
-        const bodyStyle = getComputedStyle(body);
-
-        const viewportHeight = window.innerHeight || html.clientHeight;
-        let realHeight = Math.max(html.scrollHeight, body.scrollHeight);
-
-        // Detect clamped height: body children overflowing the viewport
-        if (body.children && body.children.length > 0) {
-          for (let i = 0; i < Math.min(body.children.length, 30); i++) {
-            const child = body.children[i];
-            if (child instanceof Element && child.tagName !== 'SCRIPT' && child.tagName !== 'STYLE') {
-              const bottom = child.offsetTop + (child.offsetHeight || 0);
-              if (bottom > realHeight) realHeight = bottom;
-            }
+        const state = ScrollLock.measure(html, body);
+        blocked = state.locked;
+        isHeightClamped = state.clamped;
+        hasScrollablePage = state.holdsMore;
+        bodyFixed = state.bodyFixed;
+        savedTop = body.style.top || getComputedStyle(body).top || '';
+        // Common SPA wrapper containers, looked at now, before the classes below change the page. A wrapper that only has things positioned outside its
+        // flow sticking out, or one that holds a big pane scrolling by itself, is an app's layout, not a lock.
+        try {
+          for (const container of document.querySelectorAll('#root, #__next, #app, main, [class*="app-container"], [class*="page-container"]')) {
+            if (container instanceof HTMLElement && ScrollLock.containerLocked(container, html, body)) lockedContainers.push(container);
           }
-        }
-
-        hasScrollablePage = realHeight > viewportHeight + 15;
-        const htmlOverflowHidden = htmlStyle.overflowY === 'hidden' || htmlStyle.overflowY === 'clip';
-        const bodyOverflowHidden = bodyStyle.overflowY === 'hidden' || bodyStyle.overflowY === 'clip';
-        bodyFixed = bodyStyle.position === 'fixed';
-        // Computed height is never the string '100%', so clamping is measured: the body box is no taller than
-        // the viewport while its content is.
-        isHeightClamped = (htmlOverflowHidden || bodyOverflowHidden) &&
-          body.scrollHeight > body.clientHeight + 15 && body.clientHeight <= viewportHeight + 1;
-
-        blocked = hasScrollablePage && (htmlOverflowHidden || bodyOverflowHidden || bodyFixed);
-        savedTop = body.style.top || bodyStyle.top || '';
+        } catch {} // (a failing look at the wrappers must not keep the document itself from being decided)
       } catch {
         html.classList.add(...hadOnHtml);
         body.classList.add(...hadOnBody);
+        hadForced.forEach(el => el.classList.add('su-container-unlocked'));
         return;
       }
 
@@ -2147,20 +2230,8 @@
       html.classList.toggle('su-scrollbar-visible', hasScrollablePage);
       body.classList.toggle('su-scrollbar-visible', hasScrollablePage);
 
-      // Common SPA wrapper containers. Measured as the PAGE styled them (our class off) and decided again at every look: a container the page
-      // has since unlocked itself, or one that only overflowed while it was loading, must not stay forced open.
-      try {
-        document.querySelectorAll('.su-container-unlocked').forEach(el => el.classList.remove('su-container-unlocked'));
-        const containers = document.querySelectorAll('#root, #__next, #app, main, [class*="app-container"], [class*="page-container"]');
-        for (const container of containers) {
-          if (container instanceof HTMLElement) {
-            const cStyle = getComputedStyle(container);
-            if ((cStyle.overflowY === 'hidden' || cStyle.overflowY === 'clip') && container.scrollHeight > container.clientHeight + 20) {
-              container.classList.add('su-container-unlocked');
-            }
-          }
-        }
-      } catch {}
+      // Decided again at every look: a container the page has since unlocked itself, or one that only overflowed while it was loading, must not stay forced open.
+      for (const container of lockedContainers) container.classList.add('su-container-unlocked');
     }
   }
 

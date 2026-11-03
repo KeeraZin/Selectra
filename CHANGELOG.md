@@ -2,6 +2,30 @@
 
 Newest first. Every version has its notes in English and in Turkish (Türkçe); the same text is shown inside the extension (popup, "What's new").
 
+## 1.0.12 - 2026-10-29
+
+**English**
+
+*Web-App Scrolling & Download-Name Fixes*
+
+Two compatibility fixes: web apps that scroll inside their own panes are left alone, and other extensions' downloads keep the file names they asked for.
+
+### Fixed
+
+- **Web Apps Keep Their Layout:** Scroll Restoration no longer mistakes a web app that scrolls inside its own panes (a mail client, for example) for a locked page: its top bar and side menus stay where they are, and the popup stops reporting "Scroll locked" for it.
+- **Other Extensions' Downloads Keep Their Names:** Selectra now takes part in naming a download only while it is saving a picture itself. Before, it could replace the file names other extensions asked for, and made download managers show a "failed to name the download" warning.
+
+**Türkçe**
+
+*Web Uygulaması Kaydırma ve İndirme Adı Düzeltmeleri*
+
+İki uyumluluk düzeltmesi: kendi panelleri içinde kayan web uygulamalarına dokunulmuyor ve diğer eklentilerin indirmeleri istedikleri dosya adlarını koruyor.
+
+### Düzeltildi
+
+- **Web Uygulamalarının Düzeni Bozulmuyor:** Scroll Restoration, kendi panelleri içinde kayan bir web uygulamasını (örneğin bir e-posta istemcisini) kilitli sayfa sanmıyor: üst çubuk ve yan menüler yerinde kalıyor, popup da bunun için artık "Kaydırma kilitli" demiyor.
+- **Diğer Eklentilerin İndirmeleri Adlarını Koruyor:** Selectra artık bir indirmenin adına yalnızca kendi resim kaydı sırasında karışıyor. Daha önce başka eklentilerin istediği dosya adlarını geçersiz kılabiliyor ve indirme yöneticilerinde "failed to name the download" uyarısına yol açabiliyordu.
+
 ## 1.0.11 - 2026-10-29
 
 **English**

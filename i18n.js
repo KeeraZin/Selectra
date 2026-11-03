@@ -39,7 +39,7 @@
   const TRANSLATIONS = {
     en: {
       appName: 'Selectra',
-      version: 'v1.0.11',
+      version: 'v1.0.12',
       badgeActiveTab: 'Active tab',
       badgeGlobalTab: 'All sites (Global)',
       modeSite: 'This site',
@@ -142,7 +142,7 @@
 
     tr: {
       appName: 'Selectra',
-      version: 'v1.0.11',
+      version: 'v1.0.12',
       badgeActiveTab: 'Aktif sekme',
       badgeGlobalTab: 'Tüm siteler (Global)',
       modeSite: 'Bu site',
@@ -245,7 +245,7 @@
 
     de: {
       appName: 'Selectra',
-      version: 'v1.0.11',
+      version: 'v1.0.12',
       badgeActiveTab: 'Aktiver Tab',
       badgeGlobalTab: 'Alle Websites (Global)',
       modeSite: 'Diese Website',
@@ -348,7 +348,7 @@
 
     fr: {
       appName: 'Selectra',
-      version: 'v1.0.11',
+      version: 'v1.0.12',
       badgeActiveTab: 'Onglet actif',
       badgeGlobalTab: 'Tous les sites (Global)',
       modeSite: 'Ce site',
@@ -451,7 +451,7 @@
 
     es: {
       appName: 'Selectra',
-      version: 'v1.0.11',
+      version: 'v1.0.12',
       badgeActiveTab: 'Pestaña activa',
       badgeGlobalTab: 'Todos los sitios (Global)',
       modeSite: 'Este sitio',
@@ -554,7 +554,7 @@
 
     pt: {
       appName: 'Selectra',
-      version: 'v1.0.11',
+      version: 'v1.0.12',
       badgeActiveTab: 'Aba ativa',
       badgeGlobalTab: 'Todos os sites (Global)',
       modeSite: 'Este site',
@@ -657,7 +657,7 @@
 
     it: {
       appName: 'Selectra',
-      version: 'v1.0.11',
+      version: 'v1.0.12',
       badgeActiveTab: 'Scheda attiva',
       badgeGlobalTab: 'Tutti i siti (Globale)',
       modeSite: 'Questo sito',
@@ -760,7 +760,7 @@
 
     ru: {
       appName: 'Selectra',
-      version: 'v1.0.11',
+      version: 'v1.0.12',
       badgeActiveTab: 'Текущая вкладка',
       badgeGlobalTab: 'Все сайты (Глобально)',
       modeSite: 'Этот сайт',
@@ -863,7 +863,7 @@
 
     pl: {
       appName: 'Selectra',
-      version: 'v1.0.11',
+      version: 'v1.0.12',
       badgeActiveTab: 'Aktywna karta',
       badgeGlobalTab: 'Wszystkie strony (Globalnie)',
       modeSite: 'Ta strona',
@@ -966,7 +966,7 @@
 
     nl: {
       appName: 'Selectra',
-      version: 'v1.0.11',
+      version: 'v1.0.12',
       badgeActiveTab: 'Actief tabblad',
       badgeGlobalTab: 'Alle websites (Globaal)',
       modeSite: 'Deze site',

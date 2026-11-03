@@ -626,13 +626,45 @@ function filenameFor(filename, url, mime = '') {
 }
 
 // The server's Content-Type is only known once the download has started. Downloads this extension started are named here with it (and only
-// those: for everything else the browser's own name stands).
-const ownDownloads = new Map(); // url -> the file name asked for
+// those: for everything else the browser's own name stands). This also keeps the name that was asked for: with a download manager installed the
+// browser drops the name given to download() and uses the one from the address (measured: image.png for photo.png).
+//
+// The listener exists only while such a download waits for its name. The browser asks every listening extension about EVERY download, and a listener
+// that says nothing still counts as an opinion (measured in Chromium 151). One that is always there therefore voids the file name any other
+// extension asked for with download({ filename }), and makes the browser put "failed to name the download" on the card of every listening extension
+// installed before it (download managers such as IDM) for every download the person makes. NAME1-4 pin this against a real second extension.
+const NAMING_WAIT_MS = 60000; // the name is asked for within moments, once the server has answered; this is only the upper bound
+const ANSWER_SETTLE_MS = 300; // a listener removed before the browser has taken its answer makes the browser drop that answer (measured): leave it a moment
+const waitingForName = new Set(); // { key, filename, timer }: a download this extension started that has not been named yet (oldest first)
 const downloadKey = (url) => (url.length > 300 ? `${url.slice(0, 200)}#${url.length}` : url); // a data: URL can be megabytes: do not keep it as a key
+
+function listenForNames() {
+  const event = chrome.downloads.onDeterminingFilename;
+  const wanted = waitingForName.size > 0;
+  if (wanted === event.hasListener(onDeterminingFilename)) return;
+  if (wanted) event.addListener(onDeterminingFilename);
+  else event.removeListener(onDeterminingFilename);
+}
+function expectName(url, filename) {
+  const entry = { key: downloadKey(url), filename, timer: 0 };
+  entry.timer = setTimeout(() => letGoOfName(entry), NAMING_WAIT_MS);
+  waitingForName.add(entry);
+  listenForNames();
+  return entry;
+}
+function letGoOfName(entry, { answered = false } = {}) {
+  if (!entry || !waitingForName.delete(entry)) return;
+  clearTimeout(entry.timer);
+  if (answered) setTimeout(listenForNames, ANSWER_SETTLE_MS);
+  else listenForNames();
+}
+
 function onDeterminingFilename(item, suggest) {
   if (item.byExtensionId !== chrome.runtime.id) return; // a download the person (or another extension) started for the same address keeps the browser's name
-  const asked = ownDownloads.get(downloadKey(item.url));
-  if (asked === undefined) return;
+  const key = downloadKey(item.url);
+  const entry = [...waitingForName].find((waiting) => waiting.key === key);
+  if (!entry) return;
+  const asked = entry.filename;
   const mime = String(item.mime || '').toLowerCase();
   let filename = asked;
   if (Object.hasOwn(IMAGE_EXTENSION_OF_MIME, mime)) {
@@ -641,21 +673,22 @@ function onDeterminingFilename(item, suggest) {
     if (current !== ext && !(current === 'jpeg' && ext === 'jpg')) filename = withExtension(asked, ext);
   }
   suggest({ filename, conflictAction: 'uniquify' });
+  letGoOfName(entry, { answered: true }); // after the answer, never before it
 }
-chrome.downloads.onDeterminingFilename.addListener(onDeterminingFilename);
 
 const dialogDownloads = new Set(); // ids of downloads started with the "where to save" dialog (see problemWithDownload)
 const wantsDialog = (url, filename) => isSvgSource(url) || isSvgSource(filename); // a vector picture can carry script: the person chooses where it goes
 
 async function startDownload(url, filename, { dialog = false } = {}) {
-  ownDownloads.set(downloadKey(url), filename);
+  const entry = expectName(url, filename); // before the request: the browser asks once the server has answered
   try {
     const saveAs = dialog || wantsDialog(url, filename);
     const id = await chrome.downloads.download({ url, filename, saveAs, conflictAction: 'uniquify' });
     if (saveAs) dialogDownloads.add(id);
     return id;
-  } finally {
-    setTimeout(() => ownDownloads.delete(downloadKey(url)), 60000); // the name is asked for within moments of the start
+  } catch (err) {
+    letGoOfName(entry); // it never started: nobody will ask for its name
+    throw err;
   }
 }
 

@@ -11,6 +11,7 @@ Selectra is a Chrome extension that gives you back what some websites switch off
 - Stops pages from adding "Read more at…" links or other text to what you copy.
 - Lets you drag a picture the way you can on any normal page, even when a transparent layer covers it.
 - Saves an image on Alt+Click. Selectra picks the best picture the page itself offers for that spot (the larger version a thumbnail links to, the largest `srcset` entry) and checks that it loads before using it.
+- Saves the visible area or the whole page as a picture, from the popup or the right-click menu (a PNG, or a JPEG when the page is too large for a PNG; a very tall page comes as several numbered pictures). A picture is taken only when you press the button, a Stop button ends a capture that takes too long, and nothing is taken on sign-in, payment or captcha pages.
 - Gives Ctrl+C, Ctrl+A, Ctrl+P, F12 and the like back when a page intercepts them.
 - Unlocks pages that freeze scrolling or hide their content when printed.
 - Removes blur filters and overlays that cover article text, and stops pages from noticing when the tab is hidden or loses focus.

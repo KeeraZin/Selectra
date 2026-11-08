@@ -12,7 +12,7 @@
 <main class="doc">
 <h1>Privacy Policy for Selectra</h1>
 <p><strong>Effective Date:</strong> September 6, 2026<br>
-<strong>Last Updated:</strong> October 28, 2026</p>
+<strong>Last Updated:</strong> November 8, 2026</p>
 <p>Selectra (&quot;the Extension&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains how our browser extension operates, what data is accessed, and confirms that <strong>we do not collect, store, transmit, or sell any of your personal data.</strong></p>
 <hr>
 <h2 id="s1">1. Core Commitment: Zero Data Collection</h2>
@@ -33,10 +33,13 @@
 <li><strong>Where it is stored:</strong> On your machine, using Chrome's <code>chrome.storage.local</code> API and, for the theme and language, the local storage of the extension's own pages. In a private (incognito) window the toggles of a site are kept in memory only (<code>chrome.storage.session</code>) and are gone when the browser closes, so that no list of sites visited privately is written to your disk.</li>
 <li><strong>Data Sharing:</strong> This data never leaves your browser and is never uploaded to any remote server or cloud service. Removing the extension removes it: the browser deletes an extension's storage when it is uninstalled.</li>
 </ul>
-<h3>2.2 Images You Save (Alt+Click and &quot;Download image&quot;)</h3>
+<h3>2.2 Images and Page Screenshots You Save</h3>
 <p>When you Alt+Click a picture or use the &quot;Download image&quot; context-menu entry, Selectra asks the browser to download that picture. This download request is made by the browser itself, exactly as any other download you start (so it carries the cookies the browser would send for that address), and Selectra refuses to start it for a private-network address (localhost, local-network addresses) when the page you are on is a public website. If the file turns out to come from a private-network address after redirects, or is not a picture (an error page, for example), it is removed again.</p>
 <p>If the picture's own server refuses the request because it carries no page address, Selectra requests the picture itself from that server, sending the address of the <strong>website you are on, without its path or query</strong> (for example <code>https://example.com/</code>), as the <code>Referer</code> header. That request made by Selectra <strong>carries no cookies or other credentials</strong>, is stopped after at most 32 MB and a short time limit, is never made to a private-network address on behalf of a public page (nor redirected into one), and its result is saved by the extension; it is not handed to the web page. A picture larger than a URL can carry is passed in pieces to the script of the frame that asked for the download, which builds a temporary file reference there; it is removed as soon as the download is over. A picture that is a vector drawing (SVG) is saved through the browser's &quot;save as&quot; dialog, because such a file can contain scripts. Nothing is sent to the developer or to any third party other than the server that hosts the picture you chose to save.</p>
 <p>To find the best version of a picture, Selectra's script in the page may load candidate picture addresses found on that page the way the page itself loads pictures; those ordinary picture requests carry whatever the browser sends for any picture on that page (including cookies and the page address).</p>
+<p>When you press the &quot;Visible&quot; or &quot;Full page&quot; button on the Page Screenshot card in the popup, or choose &quot;Selectra: Full-page screenshot&quot; from the right-click menu, Selectra takes a picture of the tab you are on with the browser's own call for that (<code>chrome.tabs.captureVisibleTab</code>). &quot;Visible&quot; saves what is on the screen. &quot;Full page&quot; scrolls the page in steps and takes one picture per step; while it does, it hides the scrollbars and whatever floats over the page (a header, a side menu, a message box, a floating button) so that none of it is repeated in every piece: headers and menus are in the first picture, a message box or cookie bar comes back once at the very end, and buttons stay out; sticky headings are held where the page has them. When it is done it puts the scroll position and the page's look back, and if the extension's background script disappears in the middle, the page puts itself back after thirty seconds. The pieces are joined in the memory of Selectra's background script and saved as a PNG file; a picture too large for a PNG is saved as a JPEG instead. A very tall page is saved as several files, one under the other, because one picture can only be so tall: their names end in <code>-part1</code>, <code>-part2</code> and so on, and they are saved only when the whole page has been taken, so if you press the Stop button (or Esc), or something goes wrong on the way, none of them is saved and the page is put back; if one of the files cannot be saved, or you press Stop while they are being saved, the files already saved are removed again. A page that keeps growing while it is scrolled (an endless feed) is saved as far as it had loaded, and a capture that has taken more than two and a half minutes, or has reached two hundred pictures, ends with what it has; the message you see says so in each of these cases. A capture also ends, and saves nothing, if the window changes size while it runs (a resize, a zoom change, the developer tools opening), because pictures of two sizes cannot be put together. While a full page is being taken, a small card of the extension on the page shows the progress and a Stop button; it is part of Selectra, it is not recorded or sent anywhere, it is in none of the pictures (it is hidden for the first and the last one, and in between the strip of the window it covers is left out of each picture and taken from the next), and the person cannot scroll the page meanwhile (a wheel turn or a key would put a picture in the wrong place).</p>
+<p>The file is saved through the browser's download function, under a name made only of the site's host name and the time (for example <code>selectra-example.com-2026-11-05-143012.png</code>, and with <code>-part2</code> before the extension for the second file of a page saved in several), never the path, the query or any other part of the address. A finished picture larger than a URL can carry (nearly every full-page picture is) is passed in pieces to Selectra's script in the tab you are on, which builds a temporary file reference for the download there, exactly as described above for pictures; that script runs in an isolated environment the page's own scripts cannot reach, and the reference is removed as soon as the download is over.</p>
+<p>A screenshot is taken only when you press the button or the menu entry. Nothing is taken on the captcha, payment and sign-in pages of the short list of services where Selectra does not run (see 2.4). The browser itself draws protected (DRM) video black. A screenshot shows whatever the page shows at that moment, including frames of other sites embedded in it, so look at the page before you share the file. Selectra keeps no copy and sends the picture nowhere: the only copy is the file in your downloads folder.</p>
 <h3>2.3 Issue Reports</h3>
 <p>The popup's &quot;report&quot; button builds a text from the address of the page you are on (its host and path only; the query string and fragment are left out), the extension version, the list of active features and detected restrictions, your browser's user-agent string, a timestamp and the notes you type. It then copies that text to your clipboard and opens Selectra's own page in the Chrome Web Store (its Support tab) so that you can paste it there yourself. <strong>Selectra itself sends nothing anywhere</strong>: whether the text is ever submitted is entirely your decision, and the full text can be previewed in the popup before you use it. A separate &quot;copy&quot; button copies the same text without opening anything.</p>
 <h3>2.4 Page Content and Input Events (Processed Locally)</h3>
@@ -57,7 +60,7 @@
 <tbody>
 <tr>
 <td><code>&lt;all_urls&gt;</code></td>
-<td>Required to inject content scripts into web pages where copy, context menu, or text selection restrictions are imposed by website scripts. The scripts are not injected into the captcha, payment and sign-in frames of a short list of services.</td>
+<td>Required to inject content scripts into web pages where copy, context menu, or text selection restrictions are imposed by website scripts, and to capture a screenshot of the active tab when you press the Page Screenshot button or menu item. The scripts and screenshot capture do not run on the captcha, payment and sign-in pages of a short list of services.</td>
 </tr>
 <tr>
 <td><code>declarativeNetRequestWithHostAccess</code></td>
@@ -65,7 +68,7 @@
 </tr>
 <tr>
 <td><code>downloads</code></td>
-<td>Required to save pictures you choose to download (Alt+Click on a picture, or the &quot;Download image&quot; entry of the right-click menu) when the page disables native image saving.</td>
+<td>Required to save pictures you choose to download (Alt+Click on a picture, or the &quot;Download image&quot; entry of the right-click menu) and the screenshots (PNG, or JPEG for a page too large for a PNG) you capture from the popup or right-click menu.</td>
 </tr>
 <tr>
 <td><code>storage</code></td>
@@ -73,7 +76,7 @@
 </tr>
 <tr>
 <td><code>contextMenus</code></td>
-<td>Adds three entries to the browser's right-click menu: &quot;Selectra: Toggle all&quot;, &quot;Selectra: Clean copy&quot; (when text is selected) and &quot;Selectra: Download image&quot;.</td>
+<td>Adds four entries to the browser's right-click menu: &quot;Selectra: Toggle all&quot;, &quot;Selectra: Clean copy&quot; (when text is selected), &quot;Selectra: Download image&quot;, and &quot;Selectra: Full-page screenshot&quot;.</td>
 </tr>
 </tbody>
 </table>
@@ -81,7 +84,7 @@
 <h2 id="s4">4. Third-Party Services &amp; Links</h2>
 <p>Selectra does not share data with any third-party services. The only external page the extension opens on its own is its Chrome Web Store listing (Support tab), and only when you press the report button. When you follow that link, you are subject to Google's privacy policy for the Chrome Web Store.</p>
 <h3>4.1 Fonts</h3>
-<p>The popup uses the &quot;Plus Jakarta Sans&quot; and &quot;JetBrains Mono&quot; typefaces, and &quot;Manrope&quot; for the Cyrillic letters of the Russian interface. All are included in the extension package (SIL Open Font License 1.1, see <code>fonts/OFL.txt</code>); the popup makes no request to Google Fonts or to any other server.</p>
+<p>The popup uses the &quot;DM Sans&quot; and &quot;JetBrains Mono&quot; typefaces, and &quot;Manrope&quot; for the Cyrillic letters of the Russian interface. All are included in the extension package (SIL Open Font License 1.1, see <code>fonts/OFL.txt</code>); the popup makes no request to Google Fonts or to any other server.</p>
 <h3>4.2 Icons</h3>
 <p>The interface icons come from the Feather (MIT License) and Lucide (ISC License) icon sets and are part of the extension package. Their notices are in the &quot;Open-source licenses&quot; page of the popup.</p>
 <hr>

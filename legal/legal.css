@@ -3,24 +3,26 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #07090e;
-  --text: #f8fafc;
-  --text-2: #a3b0c4;
+  --bg: #0d0d0d;
+  --text: #fafafa;
+  --text-2: #a1a2a7;
   --line: rgba(255, 255, 255, 0.10);
   --chip: rgba(255, 255, 255, 0.07);
   --row: rgba(255, 255, 255, 0.03);
-  --accent: #818cf8;
+  --accent: #60a5ff;
+  --scrollbar: rgba(255, 255, 255, 0.18);
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #f6f8fc;
-  --text: #0f172a;
-  --text-2: #475569;
-  --line: rgba(0, 0, 0, 0.12);
-  --chip: rgba(0, 0, 0, 0.06);
-  --row: rgba(0, 0, 0, 0.028);
-  --accent: #4f46e5;
+  --bg: #f4f4f5;
+  --text: #0d0d0d;
+  --text-2: #55565c;
+  --line: rgba(13, 13, 13, 0.12);
+  --chip: rgba(13, 13, 13, 0.06);
+  --row: rgba(13, 13, 13, 0.028);
+  --accent: #1a56e0;
+  --scrollbar: rgba(13, 13, 13, 0.22);
 }
 
 *,
@@ -32,16 +34,16 @@ html { background: var(--bg); }
 /* Slim translucent scrollbar (matches popup.css so embedded legal frames never show a chunky OS scrollbar) */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.26); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.46); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 9999px; }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 13px;
   line-height: 1.6;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -52,7 +54,7 @@ body {
 }
 
 h1, h2, h3 { line-height: 1.25; letter-spacing: -0.015em; text-wrap: balance; }
-h1 { margin: 0 0 14px; font-size: 20px; font-weight: 800; }
+h1 { margin: 0 0 14px; font-size: 20px; font-weight: 700; letter-spacing: -0.03em; }
 h2 { margin: 26px 0 8px; font-size: 14.5px; font-weight: 700; scroll-margin-top: 12px; }
 h3 { margin: 18px 0 6px; font-size: 13px; font-weight: 700; color: var(--text); }
 

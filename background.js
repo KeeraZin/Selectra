@@ -5,7 +5,7 @@
 
 importScripts('shared.js');
 const {
-  UNLOCK_KEYS, GLOBAL_SETTINGS_KEY, GLOBAL_MODE_KEY, countEnabled, siteKey, resolveSettings, isPrivateHost
+  UNLOCK_KEYS, GLOBAL_SETTINGS_KEY, GLOBAL_MODE_KEY, countEnabled, siteKey, resolveSettings, isPrivateHost, isExcludedSensitiveUrl
 } = self.SelectraShared;
 
 // Private windows keep a site's settings in memory only (chrome.storage.session): a list of the sites someone visited privately must not
@@ -73,52 +73,62 @@ const MENU_TEXTS = {
   en: {
     toggleAll: 'Selectra: Toggle all',
     forceCopy: 'Selectra: Clean copy',
-    downloadImage: 'Selectra: Download image'
+    downloadImage: 'Selectra: Download image',
+    captureFullPage: 'Selectra: Full-page screenshot'
   },
   tr: {
     toggleAll: 'Selectra: Kilitleri aç/kapat',
     forceCopy: 'Selectra: Saf kopyala',
-    downloadImage: 'Selectra: Görseli indir'
+    downloadImage: 'Selectra: Görseli indir',
+    captureFullPage: 'Selectra: Tam sayfa ekran görüntüsü'
   },
   de: {
     toggleAll: 'Selectra: Alles umstellen',
     forceCopy: 'Selectra: Sauber kopieren',
-    downloadImage: 'Selectra: Bild herunterladen'
+    downloadImage: 'Selectra: Bild herunterladen',
+    captureFullPage: 'Selectra: Ganzseiten-Screenshot'
   },
   fr: {
     toggleAll: 'Selectra : Tout basculer',
     forceCopy: 'Selectra : Copie propre',
-    downloadImage: 'Selectra : Télécharger l\'image'
+    downloadImage: 'Selectra : Télécharger l\'image',
+    captureFullPage: 'Selectra : Capture pleine page'
   },
   es: {
     toggleAll: 'Selectra: Alternar todo',
     forceCopy: 'Selectra: Copia limpia',
-    downloadImage: 'Selectra: Descargar imagen'
+    downloadImage: 'Selectra: Descargar imagen',
+    captureFullPage: 'Selectra: Captura de página completa'
   },
   pt: {
     toggleAll: 'Selectra: Alternar tudo',
     forceCopy: 'Selectra: Cópia limpa',
-    downloadImage: 'Selectra: Baixar imagem'
+    downloadImage: 'Selectra: Baixar imagem',
+    captureFullPage: 'Selectra: Captura de página inteira'
   },
   it: {
     toggleAll: 'Selectra: Attiva/disattiva tutto',
     forceCopy: 'Selectra: Copia pulita',
-    downloadImage: 'Selectra: Scarica immagine'
+    downloadImage: 'Selectra: Scarica immagine',
+    captureFullPage: 'Selectra: Schermata pagina intera'
   },
   ru: {
     toggleAll: 'Selectra: Включить/выключить все',
     forceCopy: 'Selectra: Скопировать чисто',
-    downloadImage: 'Selectra: Скачать изображение'
+    downloadImage: 'Selectra: Скачать изображение',
+    captureFullPage: 'Selectra: Снимок всей страницы'
   },
   pl: {
     toggleAll: 'Selectra: Przełącz wszystko',
     forceCopy: 'Selectra: Czysta kopia',
-    downloadImage: 'Selectra: Pobierz obraz'
+    downloadImage: 'Selectra: Pobierz obraz',
+    captureFullPage: 'Selectra: Zrzut całej strony'
   },
   nl: {
     toggleAll: 'Selectra: Alles in-/uitschakelen',
     forceCopy: 'Selectra: Schoon kopiëren',
-    downloadImage: 'Selectra: Afbeelding downloaden'
+    downloadImage: 'Selectra: Afbeelding downloaden',
+    captureFullPage: 'Selectra: Schermafbeelding volledige pagina'
   }
 };
 
@@ -168,6 +178,13 @@ async function buildContextMenus(lang) {
     contexts: ['page', 'frame', 'link', 'selection', 'editable', 'video', 'audio'],
     visible: false
   });
+
+  await create({
+    id: 'su_capture_full',
+    title: texts.captureFullPage,
+    contexts: ['page', 'frame', 'selection', 'link'],
+    documentUrlPatterns: WEB_PAGE_PATTERNS
+  });
 }
 
 // The frame that last said "there is a picture under the pointer". Only that frame can take the entry away again: a slow "no" from the frame
@@ -196,7 +213,7 @@ function setImageUnderVisible(visible) {
 
 // The entry's state belongs to one pointer position on one page: whatever page comes to the front starts without it.
 chrome.tabs.onActivated.addListener(() => setImageUnderVisible(false));
-chrome.tabs.onUpdated.addListener((tabId, changeInfo) => { if (changeInfo.status === 'loading') setImageUnderVisible(false); });
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => { if (changeInfo.status === 'loading' && imageUnderOwner && imageUnderOwner.tabId === tabId) setImageUnderVisible(false); }); // (a page loading in another tab has nothing to do with this pointer)
 chrome.windows?.onFocusChanged?.addListener(() => setImageUnderVisible(false));
 chrome.runtime.onStartup.addListener(() => { setImageUnderVisible(false); refreshAllBadges(); });
 
@@ -262,6 +279,16 @@ async function onContextMenuClicked(info, tab) {
 
   if (info.menuItemId === 'su_toggle_all') {
     try { await toggleAllForTab(tab); } catch {}
+    return;
+  }
+
+  if (info.menuItemId === 'su_capture_full') {
+    try {
+      const res = await capturePageScreenshot(tab, 'full', { fromMenu: true });
+      if (!res.success && !res.cancelled) flashBadge(tab.id, '!');
+    } catch {
+      flashBadge(tab.id, '!');
+    }
   }
 }
 
@@ -449,6 +476,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.has === true || !next.visible) setMenuEntryVisible(next.visible); // a "no" from a frame that is not the owner sends nothing
     return false;
   }
+
+  if (message?.action === 'captureScreenshot') return handleCaptureScreenshot(message, sender, sendResponse);
+  if (message?.action === 'cancelScreenshot') return handleCancelScreenshot(message, sender, sendResponse);
 
   if (message?.action !== 'downloadImage') return undefined;
 
@@ -709,10 +739,12 @@ async function startDownload(url, filename, { dialog = false } = {}) {
 // KNOWN LIMITS: hosts are judged by name. A public-looking NAME that resolves to a private address is not detected
 // (an extension cannot resolve DNS). And chrome.downloads, the first attempt, follows redirects by itself: a public address that redirects
 // into the private network is noticed when the browser reports where the file came from (the file is then removed), but the request
-// has been made by then. What that allows is a blind GET, after the user's own Alt+Click, whose answer never reaches the page: no more than the
-// page can already trigger itself with an <img>.
+// has been made by then. What that allows is a blind GET, after the user's own Alt+Click (or "Download image") on a picture the page chose, whose answer never
+// reaches the page. It is not quite what an <img> can do: this request is the browser's own download, so it carries the cookies the browser sends for that address
+// (the privacy policy says so), which a picture loaded from another site may not. It cannot be closed from here: declarative rules do not apply to chrome.downloads,
+// and a request made first to see where a redirect leads would not carry those cookies (and would use up a one-time address).
 const REFERER_FIXABLE_ERRORS = new Set(['SERVER_FORBIDDEN', 'SERVER_UNAUTHORIZED', 'NOT_AN_IMAGE']);
-const MAX_DATA_URL_CHARS = 1900000; // Chrome refuses URLs beyond ~2 MB
+let MAX_DATA_URL_CHARS = 1900000; // Chrome refuses URLs beyond ~2 MB (let: the tests lower it)
 const MAX_INLINE_BYTES = 1400000;   // what still fits a data: URL
 const MAX_PROTECTED_BYTES = 32 * 1024 * 1024;
 const CHUNK_BYTES = 768 * 1024;
@@ -905,4 +937,630 @@ async function downloadFirstWorking(urls, filename, pageUrl, origin = null) {
     }
   }
   return { success: false, error: lastError };
+}
+
+// ─── Page Screenshot Capture (Visible & Full-Page OffscreenCanvas Stitching) ───
+// The service worker takes the pictures (chrome.tabs.captureVisibleTab), puts the slices together in an OffscreenCanvas and saves the result with
+// startDownload / saveFetchedBytes. The content script of the tab only scrolls the page and hides what would repeat (ScreenshotCoordinator).
+// A finished picture bigger than a data: URL can carry travels to the content script of the tab in pieces, to get a temporary file reference there,
+// exactly as a large picture does (BlobTransfer): 64 pieces at most, which is what MAX_SCREENSHOT_BYTES keeps within.
+const activeScreenshotTabs = new Set();
+const cancelRequested = new Set(); // tabs whose capture the person has stopped
+let SCREENSHOT_KEEPALIVE_MS = 20000; // (let: the tests shorten it) how often an extension call resets the worker's idle timer while a capture runs
+let CAPTURE_TIME_BUDGET_MS = 150000; // (let: the tests lower it) a capture that has taken this long ends with what it has, called cut
+const CAPTURE_MIN_INTERVAL_MS = 520; // Chrome enforces MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND = 2
+const SLICE_OVERLAP_CSS = 8; // how far neighbouring pictures overlap (CSS px): the same number as SLICE_OVERLAP in content.js, which plans the steps
+let CARD_LEAD_MS = 160; // (let: the tests change it) how long before a picture the card on the page goes away: the browser needs a moment to show the page without it
+let PART_MAX_PHYSICAL_PX = 32760; // (let: the tests lower it) the tallest canvas the worker makes (Chrome allows 32,767 per side): a page taller than this is saved as several pictures, one under the other
+const MAX_CAPTURE_SLICES = 200; // pictures of one page at most (the content script plans with the same number)
+let MAX_SCREENSHOT_BYTES = 44 * 1024 * 1024; // (let: the tests lower it) the most 64 pieces of CHUNK_BYTES can carry, with room to spare; a bigger picture is saved as a JPEG
+let lastCaptureVisibleAt = 0;
+
+/**
+ * Generates a privacy-safe file name containing only the sanitized hostname and timestamp.
+ * Never includes URL path segments, query parameters, tokens, or hash fragments.
+ */
+function screenshotFilename(pageUrl, now = new Date(), ext = 'png', part = 0) {
+  let host = 'page';
+  try {
+    const parsed = new URL(pageUrl);
+    const cleaned = (parsed.hostname || '')
+      .toLowerCase()
+      .replace(/^www\./, '')
+      .replace(/[^a-z0-9.-]+/g, '-')
+      .replace(/^[.-]+|[.-]+$/g, '')
+      .slice(0, 50);
+    if (cleaned) host = cleaned;
+  } catch {}
+  const pad = (n) => String(n).padStart(2, '0');
+  const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  return sanitizeFilename(`selectra-${host}-${stamp}${part > 0 ? `-part${part}` : ''}.${ext}`);
+}
+
+/**
+ * Whether the tab is still on the page the capture began on. The #fragment does not count: a page whose table of contents follows the reader writes
+ * the section it has scrolled to into the address, and that must not end a capture that scrolls it. Another path, query or site does.
+ */
+function isSamePage(then, now) {
+  if (typeof then !== 'string' || typeof now !== 'string') return false;
+  return then.split('#')[0] === now.split('#')[0];
+}
+
+async function captureVisibleWithRetry(windowId, { before = null, after = null } = {}) {
+  const wait = Math.max(0, CAPTURE_MIN_INTERVAL_MS - (Date.now() - lastCaptureVisibleAt));
+  if (before) {
+    // The card on the page goes away well before the picture, not at the instant of it: a page that is heavy to draw takes more than the frame or two the
+    // card is told to wait for before the browser really shows the page without it.
+    if (wait > CARD_LEAD_MS) await new Promise((r) => setTimeout(r, wait - CARD_LEAD_MS));
+    await before();
+    await new Promise((r) => setTimeout(r, CARD_LEAD_MS));
+  } else if (wait > 0) {
+    await new Promise((r) => setTimeout(r, wait));
+  }
+  try {
+    return await captureVisibleOnce(windowId);
+  } finally {
+    if (after) after();
+  }
+}
+
+async function captureVisibleOnce(windowId) {
+  let lastErr = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const dataUrl = await chrome.tabs.captureVisibleTab(windowId, { format: 'png' });
+      lastCaptureVisibleAt = Date.now();
+      if (typeof dataUrl === 'string' && dataUrl.startsWith('data:image/png')) return dataUrl;
+      throw new Error('EMPTY_CAPTURE');
+    } catch (err) {
+      lastErr = err;
+      const msg = String(err?.message || err || '');
+      if (/MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND|quota|rate/i.test(msg) && attempt < 3) {
+        await new Promise((r) => setTimeout(r, 380 * (attempt + 1)));
+        continue;
+      }
+      break;
+    }
+  }
+  throw lastErr || new Error('CAPTURE_FAILED');
+}
+
+async function decodeDataUrlToBitmap(dataUrl) {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  return createImageBitmap(blob);
+}
+
+/**
+ * A canvas of the wanted size, or, when the browser refuses to make one that big (or makes it without a way to draw on it), the biggest it gives: a quarter
+ * less each time, never less than `least` tall. `limited` says that it came out smaller than wanted, so that the picture can be called cut.
+ */
+function makeCanvas(width, height, least) {
+  for (let h = height; ; h = Math.max(least, Math.floor(h * 0.75))) {
+    try {
+      const canvas = new OffscreenCanvas(width, h);
+      const ctx = canvas.getContext('2d');
+      if (ctx) return { canvas, ctx, limited: h < height };
+    } catch {}
+    if (h <= least) throw new Error('CANVAS_UNAVAILABLE');
+  }
+}
+
+/**
+ * The picture of a page as a stack of canvases ("parts"). One canvas can only be so tall (the browser's limit, and the memory it takes): a page taller than
+ * that is saved as several pictures, one under the other, instead of being cut. A part is made when something is first drawn on it. One that nothing will
+ * be drawn on any more can be taken out (takeFinished) and its memory given back while the page is still being photographed. Every y here is a row of the
+ * whole page, in screen pixels; the parts turn it into their own. What is drawn on a part that has been taken out is dropped (it is already saved).
+ */
+class Sheet {
+  constructor(width, plannedHeight, partMax) {
+    this.width = width;
+    this.partMax = Math.max(1, Math.floor(partMax));
+    this.planned = Math.max(1, Math.round(plannedHeight));
+    const count = Math.ceil(this.planned / this.partMax);
+    this.nominal = count > 1 ? Math.ceil(this.planned / count) : this.partMax; // parts of about the same height; a page that fits one part may grow into it
+    this.parts = [];
+    this.limited = false; // the browser gave a shorter canvas than asked for at least once: there are more parts than planned
+  }
+
+  /** How tall the page is as far as it is known. */
+  get height() { return this.planned; }
+
+  /** The page turns out taller than planned (it grew while it was scrolled). */
+  plan(height) { this.planned = Math.max(this.planned, Math.round(height)); }
+
+  open(start, wantEnd) {
+    const wanted = Math.min(this.nominal, Math.max(this.planned - start, wantEnd - start));
+    const made = makeCanvas(this.width, wanted, Math.min(wanted, 1024));
+    if (made.limited) this.limited = true;
+    const part = { index: this.parts.length, start, height: made.canvas.height, canvas: made.canvas, ctx: made.ctx, taken: false, capped: made.limited }; // capped: the browser would not make it taller
+    this.parts.push(part);
+    return part;
+  }
+
+  grow(part, height) {
+    let made;
+    try { made = makeCanvas(this.width, height, part.height + 1); } catch { return; } // no taller canvas to be had: the next part takes over
+    made.ctx.drawImage(part.canvas, 0, 0);
+    part.canvas = made.canvas;
+    part.ctx = made.ctx;
+    part.height = made.canvas.height;
+    if (made.limited) { this.limited = true; part.capped = true; }
+  }
+
+  /** Makes sure the rows up to `end` can be drawn on: the last part grows up to what a part may have, then parts are opened one after the other. */
+  cover(end) {
+    if (!Number.isFinite(end)) return;
+    if (end > this.planned) this.planned = end;
+    for (;;) {
+      const last = this.parts[this.parts.length - 1];
+      const have = last ? last.start + last.height : 0;
+      if (have >= end) return;
+      if (last && !last.capped && last.height < this.nominal) {
+        const before = last.height;
+        this.grow(last, Math.min(this.nominal, Math.max(this.planned - last.start, end - last.start)));
+        if (last.height > before) continue;
+      }
+      this.open(have, end);
+    }
+  }
+
+  /** Calls fn(part, from, to) for each part that the rows [y, y + rows) of the page lie in (from and to are rows of the page). */
+  each(y, rows, fn) {
+    if (!Number.isFinite(y) || !(rows > 0) || !Number.isFinite(rows)) return;
+    this.cover(y + rows);
+    for (const part of this.parts) {
+      if (part.taken) continue;
+      const from = Math.max(y, part.start);
+      const to = Math.min(y + rows, part.start + part.height);
+      if (to > from) fn(part, from, to);
+    }
+  }
+
+  /** drawImage with the destination in rows of the page: a picture that crosses the border of two parts is split there. */
+  draw(image, sx, sy, sw, sh, dx, dy) {
+    this.each(dy, sh, (part, from, to) => {
+      part.ctx.drawImage(image, sx, sy + (from - dy), sw, to - from, dx, from - part.start, sw, to - from);
+    });
+  }
+
+  fillRect(color, x, y, w, h) {
+    this.each(y, h, (part, from, to) => {
+      part.ctx.fillStyle = color;
+      part.ctx.fillRect(x, from - part.start, w, to - from);
+    });
+  }
+
+  /** The pixels of a place that lies in one part (a sample of the first screen, for instance). */
+  getImageData(x, y, w, h) {
+    this.cover(y + h);
+    const part = this.parts.find((candidate) => !candidate.taken && y >= candidate.start && y < candidate.start + candidate.height);
+    return part ? part.ctx.getImageData(x, y - part.start, w, h) : { data: [255, 255, 255, 255] };
+  }
+
+  /** The parts that end before row `before`, which nothing will be drawn on any more; each is given once, the last part never. */
+  takeFinished(before) {
+    const out = [];
+    for (let i = 0; i < this.parts.length - 1; i++) {
+      const part = this.parts[i];
+      if (!part.taken && part.start + part.height <= before) {
+        part.taken = true;
+        out.push(part);
+      }
+    }
+    return out;
+  }
+
+  /** The page is over at `height`: the part it ends in is cut to size, what lies beyond is dropped. Returns the parts that were not taken out before. */
+  finish(height) {
+    const end = Math.max(1, Math.round(height));
+    const rest = [];
+    for (const part of this.parts) {
+      if (part.taken) continue;
+      if (part.start >= end) {
+        part.canvas = part.ctx = null;
+        continue;
+      }
+      if (part.start + part.height > end) {
+        const made = makeCanvas(this.width, end - part.start, end - part.start);
+        made.ctx.drawImage(part.canvas, 0, 0, this.width, end - part.start, 0, 0, this.width, end - part.start);
+        part.canvas = made.canvas;
+        part.ctx = made.ctx;
+        part.height = end - part.start;
+      }
+      rest.push(part);
+    }
+    return rest;
+  }
+}
+
+/** An opaque, scaled copy of a canvas: a JPEG has no transparency, and what was never drawn must come out white, not black. */
+function flatCanvas(source, scale = 1) {
+  const width = Math.max(1, Math.round(source.width * scale));
+  const height = Math.max(1, Math.round(source.height * scale));
+  const flat = new OffscreenCanvas(width, height);
+  const ctx = flat.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(source, 0, 0, width, height);
+  return flat;
+}
+
+/**
+ * The picture as a PNG; when that is more than `fits` accepts, as a JPEG, and if need be a smaller one, so that a very big page is saved instead of
+ * failing. `allowPng: false` starts with the JPEG.
+ */
+async function encodeScreenshot(canvas, fits, { allowPng = true } = {}) {
+  if (allowPng) {
+    const png = await canvas.convertToBlob({ type: 'image/png' });
+    if (fits(png.size)) return { blob: png, format: 'png' };
+  }
+  for (const scale of [1, 0.75, 0.5, 0.35]) {
+    const jpeg = await flatCanvas(canvas, scale).convertToBlob({ type: 'image/jpeg', quality: 0.9 });
+    if (fits(jpeg.size)) return { blob: jpeg, format: 'jpeg' };
+  }
+  throw new Error('TOO_LARGE');
+}
+
+/**
+ * Saves the picture of the visible area. Up to a data: URL's size it goes as one; a bigger one in pieces through the content script of the tab; and
+ * when the tab has none (it was opened before the extension was installed or reloaded) as a JPEG that fits a data: URL.
+ */
+async function saveVisibleDataUrl(dataUrl, pageUrl, tabId) {
+  const download = async (url, name) => {
+    const id = await startDownload(url, name);
+    const outcome = await waitForDownload(id, pageUrl);
+    if (!outcome.ok) throw new Error(outcome.error || 'DOWNLOAD_FAILED');
+    return id;
+  };
+  if (dataUrl.length <= MAX_DATA_URL_CHARS) return { id: await download(dataUrl, screenshotFilename(pageUrl)), format: 'png' };
+
+  const bytes = new Uint8Array(await (await fetch(dataUrl)).arrayBuffer());
+  let saved = null;
+  try {
+    saved = await saveFetchedBytes({ mime: 'image/png', bytes }, screenshotFilename(pageUrl), { tabId, frameId: 0 }, pageUrl);
+  } catch {} // nobody in the tab to take the pieces
+  if (saved) {
+    if (!saved.outcome.ok) throw new Error(saved.outcome.error || 'DOWNLOAD_FAILED');
+    return { id: saved.id, format: 'png' };
+  }
+
+  const bitmap = await decodeDataUrlToBitmap(dataUrl);
+  try {
+    const source = new OffscreenCanvas(bitmap.width, bitmap.height);
+    source.getContext('2d').drawImage(bitmap, 0, 0);
+    const { blob } = await encodeScreenshot(source, (size) => Math.ceil(size / 3) * 4 + 40 <= MAX_DATA_URL_CHARS, { allowPng: false });
+    const jpegUrl = `data:image/jpeg;base64,${toBase64(new Uint8Array(await blob.arrayBuffer()))}`;
+    return { id: await download(jpegUrl, screenshotFilename(pageUrl, new Date(), 'jpg')), format: 'jpeg' };
+  } finally { bitmap.close(); }
+}
+
+/**
+ * The popup asks for a capture. Only the extension's own pages may: a content script lives inside a web page, so its messages carry a tab, and a
+ * page must never be able to start a screenshot (or a download) by getting a message through to the service worker.
+ */
+function handleCaptureScreenshot(message, sender, sendResponse) {
+  if (sender.tab) {
+    sendResponse({ success: false, error: 'UNAUTHORIZED_SOURCE' });
+    return false;
+  }
+  const mode = message.mode === 'visible' ? 'visible' : 'full';
+  const resolveTab = async () => {
+    if (Number.isInteger(message.tabId)) {
+      try { return await chrome.tabs.get(message.tabId); } catch {}
+    }
+    const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
+    return active || null;
+  };
+  resolveTab()
+    .then((tab) => capturePageScreenshot(tab, mode, { fromMenu: false }))
+    .then(sendResponse, (err) => sendResponse({ success: false, error: err?.message || 'CAPTURE_FAILED' }));
+  return true;
+}
+
+/**
+ * The person presses Stop in the popup: the capture of that tab ends at the next picture and the page is put back. Only the extension's own pages may ask: a
+ * page that could stop captures could also keep a person from ever getting one.
+ */
+function handleCancelScreenshot(message, sender, sendResponse) {
+  if (sender.tab) {
+    sendResponse({ success: false, error: 'UNAUTHORIZED_SOURCE' });
+    return false;
+  }
+  const tabId = Number(message.tabId);
+  if (Number.isInteger(tabId)) {
+    cancelRequested.add(tabId);
+    chrome.tabs.sendMessage(tabId, { action: 'screenshotCancel' }, { frameId: 0 }).catch(() => {}); // the page stops in the middle of what it is doing
+  }
+  sendResponse({ success: true });
+  return false;
+}
+
+async function capturePageScreenshot(tab, mode = 'full', { fromMenu = false } = {}) {
+  if (!tab || !Number.isInteger(tab.id) || !tab.url || !isWebUrl(tab.url)) {
+    return { success: false, error: 'UNSUPPORTED_PAGE' };
+  }
+  if (isExcludedSensitiveUrl(tab.url)) {
+    return { success: false, error: 'SENSITIVE_PAGE' };
+  }
+  if (activeScreenshotTabs.has(tab.id)) {
+    return { success: false, error: 'ALREADY_CAPTURING' };
+  }
+
+  activeScreenshotTabs.add(tab.id);
+  cancelRequested.delete(tab.id); // (a Stop that came when nothing was running does not stop the next capture)
+  const startedAt = Date.now();
+  const keepAlive = setInterval(() => { try { chrome.runtime.getPlatformInfo(() => {}); } catch {} }, SCREENSHOT_KEEPALIVE_MS); // an extension call resets the worker's idle timer
+  const initialUrl = tab.url;
+  const tellPage = (toastKey, extra = {}) => chrome.tabs.sendMessage(tab.id, { action: 'screenshotCleanup', toastKey, ...extra }, { frameId: 0 }).catch(() => {});
+  const card = (op, extra = {}) => chrome.tabs.sendMessage(tab.id, { action: 'screenshotHud', op, ...extra }, { frameId: 0 }).catch(() => null); // the card on the page
+  try {
+    if (mode === 'visible') {
+      const dataUrl = await captureVisibleWithRetry(tab.windowId);
+      const saved = await saveVisibleDataUrl(dataUrl, initialUrl, tab.id);
+      if (fromMenu) tellPage(saved.format === 'jpeg' ? 'screenshotJpeg' : 'screenshotSaved');
+      return { success: true, downloadId: saved.id, slices: 1, truncated: false, format: saved.format };
+    }
+
+    let plan = null;
+    try {
+      plan = await chrome.tabs.sendMessage(tab.id, { action: 'screenshotPrepare' }, { frameId: 0 });
+    } catch {
+      plan = null;
+    }
+
+    // Without a content script in the tab (opened before the extension was installed or reloaded) the page cannot be scrolled: the visible area is
+    // saved, and the reply says so (the popup tells the person).
+    if (!plan || plan.ok !== true) {
+      const dataUrl = await captureVisibleWithRetry(tab.windowId);
+      const saved = await saveVisibleDataUrl(dataUrl, initialUrl, tab.id);
+      return { success: true, downloadId: saved.id, slices: 1, truncated: false, format: saved.format, fallbackVisible: true };
+    }
+
+    const slices = Array.isArray(plan.slices) && plan.slices.length ? plan.slices : [0];
+    const paneTop = Number(plan.paneTop) || 0;       // an app whose pane scrolls by itself: where the pane starts in the window ...
+    const paneLeft = plan.isPane ? Math.max(0, Number(plan.paneLeft) || 0) : 0;
+    const paneHeight = Number(plan.paneHeight) || 0; // ... how tall it is ...
+    const paneBottom = Number(plan.paneBottom) > 0 ? Number(plan.paneBottom) : paneTop + paneHeight; // ... where it ends exactly ...
+    const paneWidth = plan.isPane ? Math.max(0, Number(plan.paneWidth) || 0) : 0;
+    const bottomTail = plan.isPane ? Math.max(0, Number(plan.bottomTail) || 0) : 0; // ... and what lies under it (a bar), which is in the first picture only
+    const fullWidthFooter = plan.fullWidthFooter !== false;
+    // Where the card on the page begins (CSS px from the top of the window) when it stays there through the pictures in the middle: the band it covers is not used
+    // from those pictures (the page was planned in steps that are shorter by it); null: the card is away for every picture, as it was before.
+    const cardTop = Number.isFinite(Number(plan.cardTop)) && Number(plan.cardTop) > 0 ? Number(plan.cardTop) : null;
+    let toastKey = '';
+    let sheet = null; // the picture of the page, in parts (Sheet)
+    let tail = null;
+    let drawnBottom = 0; // how far down anything was drawn (the page may be shorter than it was planned to be)
+    let scale = 1;
+    let srcX = 0;
+    let srcW = 0;
+    let leftBg = typeof plan.leftGutterBg === 'string' ? plan.leftGutterBg : '';
+    let rightBg = typeof plan.rightGutterBg === 'string' ? plan.rightGutterBg : '';
+    let gutterFillTop = 0;
+    let firstBottom = 0; // the row (screen pixels) where what the first picture is final for ends: the bottom of the window, or of the pane
+    let tailY = 0;
+    let pageCut = false; // the page went on below the last picture
+    let pageGrowing = false; // it goes on growing as it is scrolled (an endless feed): what was open is saved
+    let growthSeen = 0; // how tall the page turned out to be (CSS px) before the first picture was in, when there was no sheet yet to grow
+    const encoded = []; // the finished parts as pictures, waiting to be saved: a Stop or a failure leaves nothing behind
+
+    const fillGutters = (fromY, toY) => {
+      if (toY <= fromY) return;
+      if (srcX > 0 && leftBg) sheet.fillRect(leftBg, 0, fromY, srcX, toY - fromY);
+      if (srcX + srcW < sheet.width && rightBg) sheet.fillRect(rightBg, srcX + srcW, fromY, sheet.width - (srcX + srcW), toY - fromY);
+    };
+    // A part that nothing will be drawn on any more becomes a PNG (a JPEG when that is too big) and gives its canvas back at once.
+    const encodePart = async (part) => {
+      const { blob, format } = await encodeScreenshot(part.canvas, (size) => size <= MAX_SCREENSHOT_BYTES);
+      encoded.push({ index: part.index, blob, format });
+      part.canvas = part.ctx = null;
+    };
+
+    const retaken = {}; // slice -> how many times its picture was taken again (the page was not where it was asked to be)
+    try {
+      for (let i = 0; i < slices.length; i++) {
+        if (cancelRequested.has(tab.id)) return { success: false, cancelled: true, error: 'CANCELLED' };
+        if (Date.now() - startedAt > CAPTURE_TIME_BUDGET_MS) { pageCut = true; break; } // too slow (a very long page, a slow one): what is there is saved
+        const currentTab = await chrome.tabs.get(tab.id).catch(() => null);
+        if (!currentTab || currentTab.active === false || !isSamePage(initialUrl, currentTab.url)) {
+          throw new Error('TAB_CHANGED');
+        }
+
+        const stepReply = await chrome.tabs.sendMessage(
+          tab.id,
+          { action: 'screenshotStep', index: i, y: slices[i], isLast: i === slices.length - 1 },
+          { frameId: 0 }
+        );
+        if (!stepReply || stepReply.ok !== true) {
+          if (stepReply?.cancelled) {
+            return { success: false, cancelled: true, error: 'CANCELLED' };
+          }
+          throw new Error(stepReply?.error || 'STEP_FAILED');
+        }
+        if (stepReply.cut === true) pageCut = true;
+        if (stepReply.growing === true) pageGrowing = true;
+        if (Number.isFinite(stepReply.nextSliceY) && stepReply.nextSliceY > slices[slices.length - 1] + 2 && slices.length < MAX_CAPTURE_SLICES) {
+          slices.push(stepReply.nextSliceY);
+          if (Number.isFinite(stepReply.newTotalHeight)) {
+            if (sheet) sheet.plan(Math.round(stepReply.newTotalHeight * scale));
+            else growthSeen = Math.max(growthSeen, stepReply.newTotalHeight);
+          }
+        }
+
+        chrome.runtime.sendMessage({
+          action: 'screenshotProgress',
+          tabId: tab.id,
+          current: i + 1,
+          total: slices.length
+        }).catch(() => {});
+        card('progress', { current: i + 1, total: slices.length });
+
+        // The first picture (a bar fixed to the window is only in it) and the last one (what lies under a pane, a bar that closes the page) are taken with the card away;
+        // in between it stays on the page, and the rows it covers are taken from the next picture.
+        const middle = cardTop !== null && i > 0 && i < slices.length - 1;
+        const dataUrl = await captureVisibleWithRetry(currentTab.windowId, middle ? {} : { before: () => card('hold'), after: () => { card('release'); } });
+        // Was the page where the picture was asked for? A page that scrolls by itself (a chat that follows its newest line) or a wheel turn that got in before
+        // it was held off puts the picture somewhere else: it is taken again, three times at most.
+        const where = await chrome.tabs.sendMessage(tab.id, { action: 'screenshotVerify' }, { frameId: 0 }).catch(() => null);
+        // The window must still be the one the plan was made for: a resize, a zoom change or the developer tools opening makes this and the next pictures another size, and they cannot be put
+        // together with the first (the page would come out shifted or squeezed): the capture ends, the page is put back and nothing is saved.
+        if (where?.ok && Number.isFinite(where.w) && (Math.abs(where.w - Number(plan.viewportWidth)) > 0.5 || Math.abs(where.h - Number(plan.viewportHeight)) > 0.5 || Math.abs(where.dpr - Number(plan.dpr)) > 0.01)) throw new Error('WINDOW_CHANGED');
+        if (where?.ok && Number.isFinite(stepReply.actualScrollTop) && Math.abs(where.top - stepReply.actualScrollTop) > 1.5 && (retaken[i] = (retaken[i] || 0) + 1) <= 3) { i--; continue; }
+        const bmp = await decodeDataUrlToBitmap(dataUrl);
+        let doneAbove = 0; // the parts that end above this row are done
+        try {
+          if (sheet && bmp.width !== sheet.width) throw new Error('WINDOW_CHANGED'); // (the same, seen in the picture itself)
+          if (i === 0) {
+            // The screen's own scale (zoom included) is exact. The ratio of the picture to the window's width in CSS px is only as exact as that whole
+            // number: on a screen scaled to 125 % it is off by up to 0.1 %, which is a few pixels of drift over a long page. The ratio is the fallback.
+            const ratio = bmp.width / Math.max(1, Number(plan.viewportWidth) || bmp.width);
+            const dpr = Number(plan.dpr) || 0;
+            scale = dpr > 0 && Math.abs(bmp.width - (Number(plan.viewportWidth) || 0) * dpr) <= 2 ? dpr : ratio;
+            const pageRows = Math.round(Math.max(Number(plan.totalHeight) || bmp.height / scale, growthSeen) * scale);
+            sheet = new Sheet(bmp.width, Math.max(bmp.height, pageRows), PART_MAX_PHYSICAL_PX);
+            sheet.draw(bmp, 0, 0, bmp.width, bmp.height, 0, 0);
+            drawnBottom = bmp.height;
+            firstBottom = Math.min(bmp.height, Math.round((paneTop + paneHeight) * scale));
+            srcX = plan.isPane ? Math.max(0, Math.min(bmp.width - 1, Math.round(paneLeft * scale))) : 0;
+            srcW = plan.isPane ? Math.max(1, Math.min(bmp.width - srcX, Math.round((paneWidth || bmp.width / scale) * scale))) : bmp.width;
+            tailY = Math.min(bmp.height - 1, Math.ceil(paneBottom * scale - 1e-6)); // (the first screen pixel that lies wholly under the pane)
+            gutterFillTop = fullWidthFooter ? Math.min(bmp.height, tailY) : bmp.height;
+            const sampleY = Math.min(bmp.height - 1, Math.max(0, Math.round((paneTop + (paneHeight || bmp.height / scale) * 0.5) * scale)));
+            if (srcX > 0 && !leftBg) {
+              const px = sheet.getImageData(Math.max(0, Math.min(srcX - 1, 4)), sampleY, 1, 1).data;
+              leftBg = `rgb(${px[0]}, ${px[1]}, ${px[2]})`;
+            }
+            if (srcX + srcW < bmp.width && !rightBg) {
+              const px = sheet.getImageData(Math.min(bmp.width - 1, srcX + srcW + 4), sampleY, 1, 1).data;
+              rightBg = `rgb(${px[0]}, ${px[1]}, ${px[2]})`;
+            }
+          } else {
+            // where the page REALLY is (the browser may not scroll as far as asked), not where it was asked to go
+            const actual = Number.isFinite(stepReply.actualScrollTop) ? stepReply.actualScrollTop : slices[i];
+            const srcY = Math.min(bmp.height - 1, Math.round(paneTop * scale));
+            let srcH = Math.max(1, Math.min(bmp.height - srcY, Math.round((paneHeight || bmp.height / scale) * scale)));
+            if (middle) srcH = Math.max(1, Math.min(srcH, Math.round((Math.min(paneTop + paneHeight, cardTop) - paneTop) * scale))); // (down to where the card begins)
+            const destY = Math.round((paneTop + actual) * scale);
+            // The rows the first picture has are final (a bar that is fixed to the window is in them and hidden from the later pictures: it must not be printed over by
+            // the page behind it). A picture in the middle, which begins well above the end of the first one, therefore starts where that one ends, less the overlap.
+            const skip = middle ? Math.max(0, Math.min(srcH - 1, firstBottom - Math.round(SLICE_OVERLAP_CSS * scale) - destY)) : 0;
+            const drawH = Math.min(srcH - skip, sheet.height - (destY + skip)); // cut at the bottom of the page: moving the slice up would print it over the one above
+            if (drawH > 0) {
+              sheet.draw(bmp, srcX, srcY + skip, srcW, drawH, srcX, destY + skip);
+              fillGutters(Math.max(gutterFillTop, destY + skip), destY + skip + drawH);
+              drawnBottom = Math.max(drawnBottom, destY + skip + drawH);
+              doneAbove = destY - Math.ceil(bottomTail * scale) - 2; // (the later pictures start at destY or lower down; the bar under a pane is drawn at the very end)
+            }
+          }
+          // What lies under the pane is taken from the last picture: there everything is as it is to stay (a bar pulled up over the pane's edge is back, a
+          // button that was hidden stays hidden). A single picture is the last one too.
+          if (bottomTail > 0 && i === slices.length - 1) {
+            tail = await createImageBitmap(bmp, 0, tailY, bmp.width, Math.max(1, bmp.height - tailY));
+          }
+        } finally {
+          bmp.close();
+        }
+        // A page of many screens is saved in several pictures: the part that is finished goes to a PNG now and gives its memory back.
+        if (sheet && doneAbove > 0) for (const part of sheet.takeFinished(doneAbove)) await encodePart(part);
+      }
+      if (cancelRequested.has(tab.id)) return { success: false, cancelled: true, error: 'CANCELLED' };
+      if (!sheet) throw new Error('NO_PICTURE');
+
+      // The end of the picture: a bar under a pane closes it; a page that turned out shorter than planned is cut to the rows it has.
+      const drawTailRow = (yPos) => {
+        if (fullWidthFooter || (srcX === 0 && srcW === sheet.width)) {
+          sheet.draw(tail, 0, 0, tail.width, tail.height, 0, yPos);
+        } else {
+          fillGutters(Math.min(gutterFillTop, yPos), yPos + tail.height);
+          sheet.draw(tail, srcX, 0, srcW, tail.height, srcX, yPos);
+        }
+      };
+      const planned = sheet.height;
+      let pageHeight = planned;
+      if (tail) {
+        const contentBottom = Math.min(drawnBottom, planned - tail.height);
+        if (contentBottom > 0 && contentBottom < planned - tail.height - 1) {
+          // the pane got shorter than planned (content went away while it was scrolled): the bar under it follows its last row, no blank band between them
+          pageHeight = contentBottom + tail.height;
+          drawTailRow(contentBottom);
+        } else drawTailRow(planned - tail.height);
+      } else if (drawnBottom > 0 && drawnBottom < planned - 1) {
+        // the page ended sooner than planned (content went away while it was scrolled): no blank band under it
+        pageHeight = drawnBottom;
+      }
+      tellPage('', { saving: true }); // the pictures are all taken: the page is put back while the rest is turned into files (the card says so)
+      for (const part of sheet.finish(pageHeight)) await encodePart(part);
+      encoded.sort((x, y) => x.index - y.index);
+      if (cancelRequested.has(tab.id)) return { success: false, cancelled: true, error: 'CANCELLED' }; // (a Stop that came while the parts were made into pictures: nothing is saved yet)
+
+      const stamp = new Date(); // (one time for all parts: they belong together)
+      const many = encoded.length > 1;
+      const savedIds = [];
+      // A page saved in several files is all or nothing, as the privacy policy says: when one of them cannot be saved, or a Stop comes while they are being saved, the ones that were saved
+      // are taken back (stopped if they still run, deleted, and gone from the downloads list).
+      const takeBack = async () => {
+        for (const id of savedIds) {
+          await chrome.downloads.cancel(id).catch(() => {});
+          await chrome.downloads.removeFile(id).catch(() => {});
+          await chrome.downloads.erase({ id }).catch(() => {});
+        }
+        savedIds.length = 0;
+      };
+      try {
+        for (const [k, piece] of encoded.entries()) {
+          const isPng = piece.format === 'png';
+          const bytes = new Uint8Array(await piece.blob.arrayBuffer());
+          piece.blob = null;
+          const saved = await saveFetchedBytes(
+            { mime: isPng ? 'image/png' : 'image/jpeg', bytes },
+            screenshotFilename(initialUrl, stamp, isPng ? 'png' : 'jpg', many ? k + 1 : 0),
+            { tabId: tab.id, frameId: 0 },
+            initialUrl
+          );
+          if (Number.isInteger(saved.id)) savedIds.push(saved.id); // (also the one that failed: it is in the list as well)
+          if (!saved.outcome.ok) {
+            throw new Error(saved.outcome.error || 'DOWNLOAD_FAILED');
+          }
+          if (cancelRequested.has(tab.id)) {
+            await takeBack();
+            return { success: false, cancelled: true, error: 'CANCELLED' };
+          }
+        }
+      } catch (err) {
+        await takeBack();
+        throw err;
+      }
+
+      const format = encoded.some((piece) => piece.format === 'jpeg') ? 'jpeg' : 'png';
+      const truncated = plan.truncated === true || pageCut;
+      if (fromMenu) {
+        toastKey = truncated ? 'screenshotTruncated' : pageGrowing ? 'screenshotPartial' : many ? 'screenshotParts' : format === 'jpeg' ? 'screenshotJpeg' : 'screenshotSaved';
+      }
+      return {
+        success: true,
+        downloadId: savedIds[0],
+        downloadIds: savedIds,
+        parts: encoded.length,
+        slices: slices.length,
+        truncated,
+        partial: pageGrowing,
+        format,
+        width: sheet.width,
+        height: pageHeight
+      };
+    } catch (err) {
+      if (fromMenu) toastKey = 'screenshotFailed';
+      throw err;
+    } finally {
+      tail?.close();
+      chrome.tabs.sendMessage(tab.id, { action: 'screenshotCleanup', toastKey, parts: encoded.length }, { frameId: 0 }).catch(() => {});
+    }
+  } catch (err) {
+    return { success: false, error: err?.message || 'CAPTURE_FAILED' };
+  } finally {
+    clearInterval(keepAlive);
+    cancelRequested.delete(tab.id);
+    activeScreenshotTabs.delete(tab.id);
+  }
 }

@@ -6,7 +6,7 @@
   'use strict';
 
   const INTERACTIVE = 'a[href], button, input, select, textarea, label, summary, video, audio, iframe, object, embed, ' +
-    '[role="button"], [role="link"], [role="menuitem"], [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
+    '[role="button"], [role="link"], [role="menuitem"], [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])';
 
   // Closed roots are only reachable through chrome.dom; open ones through .shadowRoot.
   function getShadowRoot(el) {
@@ -272,7 +272,8 @@
     }
 
     // a link that points straight at an image file is the full-size original of what is shown
-    const link = primary.closest && primary.closest('a[href]');
+    let link = null;
+    try { link = Element.prototype.closest.call(primary, 'a[href]'); } catch {} // (not primary.closest: a page can name a form control "closest")
     if (link && IMAGE_FILE.test(link.getAttribute('href') || '')) pushUrl(out, link.getAttribute('href'), 'link-original', {}, link.baseURI);
 
     return out;

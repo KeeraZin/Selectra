@@ -2,6 +2,52 @@
 
 Newest first. Every version has its notes in English and in Turkish (Türkçe); the same text is shown inside the extension (popup, "What's new").
 
+## 1.1.0 - 2026-11-08
+
+**English**
+
+*New Look, Page Screenshot & Print Unlock Animation*
+
+A calmer new look for the popup and its windows, in both themes. Save the visible area or the whole page as a picture from the popup or the right-click menu. The Print Unlock icon now moves on hover like the others.
+
+### Added
+
+- **Page Screenshot (Visible & Full Page):** A new card under Media and Downloads, and a "Selectra: Full-page screenshot" entry in the right-click menu. "Visible" saves what is on the screen; "Full page" scrolls the page and joins the pictures into one, also for apps whose pane scrolls by itself. Headers and side menus appear once, a message box or cookie bar closes the page once, floating buttons stay out of the way, sticky headings stay where the page has them, the scrollbar and the page's own scroll position are put back afterwards, and nothing is taken on sign-in, payment or captcha pages. It runs only when you press it, joins the pictures inside the extension's background worker and saves the file straight to your device; a page too large for a PNG is saved as a JPEG. A very tall page is saved as several pictures, one under the other; a page that never stops growing is saved as far as it had loaded; and while it works, the other button becomes a Stop button (Esc works too) that ends the capture and puts the page back. While a full page is photographed, a small card on the page shows the progress with a Stop button, the page cannot be scrolled by accident, and a picture that was taken at the wrong place is taken again.
+
+### Changed
+
+- **New Look:** The popup, the report window, the language list and the policy pages have a new, calmer design: near-black or soft-grey surfaces with fine lines, DM Sans type, slim green switches, the logo's blue for the main actions, and a light theme in the same language. Everything is where it was; the first screen now shows three cards in full.
+- **Print Unlock Icon:** Like the other cards, its icon now moves when the pointer is over it.
+
+### Fixed
+
+- **Mode Switch:** A click made right after switching between "This site" and "Global" (a switch, Unlock All or Reset) could be written into the other scope's settings. It now goes into the settings that were on screen.
+- **Scroll Restoration:** On pages that freeze the scroll with a fixed page body while a modal is open, the page no longer jumps to the top, and closing the modal puts it back where it was.
+- **Print Unlock:** Switched off, it now gives the page its own print function back.
+- **Page Compatibility:** A page with a form control named "closest" no longer breaks its own scripts when Text Selection or Scroll Restoration is on, and editors written as <div contenteditable> keep their arrow keys with Scroll Restoration on.
+
+**Türkçe**
+
+*Yeni Görünüm, Sayfa Ekran Görüntüsü ve Print Unlock Animasyonu*
+
+Popup'ın ve pencerelerinin iki temada da daha sakin yeni görünümü. Görünür alanı ya da sayfanın tamamını popup'tan veya sağ tık menüsünden resim olarak kaydedin. Print Unlock simgesi artık diğerleri gibi üzerine gelince hareket ediyor.
+
+### Eklendi
+
+- **Sayfa Ekran Görüntüsü (Ekran ve Tam Sayfa):** Medya & Görseller bölümünde yeni bir kart ve sağ tık menüsünde "Selectra: Tam sayfa ekran görüntüsü" seçeneği. "Ekran" görünen alanı kaydeder; "Tam Sayfa" sayfayı kaydırıp parçaları tek resimde birleştirir, kendi panelinde kayan uygulamalarda da. Üst çubuklar ve yan menüler bir kez görünür, mesaj kutusu ya da çerez çubuğu sayfanın sonunda bir kez yer alır, yüzen düğmeler yoldan çekilir, yapışkan başlıklar sayfadaki yerinde kalır, işlem bitince sayfanın kaydırma konumu eski haline döner ve oturum açma, ödeme ve captcha sayfalarında hiçbir şey alınmaz. Yalnızca siz basınca çalışır, parçalar eklentinin arka plan işçisinde birleştirilir ve dosya doğrudan cihazınıza kaydedilir; PNG için çok büyük sayfalar JPEG olarak kaydedilir. Çok uzun bir sayfa alt alta birkaç resim olarak kaydedilir; hiç bitmeyen bir sayfa yüklenmiş olduğu yere kadar kaydedilir; çalışırken diğer düğme, yakalamayı bitirip sayfayı eski haline getiren bir Durdur düğmesine döner (Esc tuşu da aynısını yapar). Tam sayfa çekilirken sayfada ilerlemeyi gösteren ve Durdur düğmesi olan küçük bir kart görünür, sayfa yanlışlıkla kaydırılamaz ve yanlış yerde alınan resim yeniden alınır.
+
+### Değişti
+
+- **Yeni Görünüm:** Popup, sorun bildirme penceresi, dil listesi ve politika sayfaları yeni, daha sakin bir tasarıma geçti: ince çizgili, neredeyse siyah ya da yumuşak gri yüzeyler, DM Sans yazı tipi, ince yeşil anahtarlar, ana işlemlerde logonun mavisi ve aynı dilde açık tema. Her şey yerinde duruyor; ilk ekranda artık üç kart tam görünüyor.
+- **Print Unlock Simgesi:** Diğer kartlar gibi, üzerine gelince simgesi artık hareket ediyor.
+
+### Düzeltildi
+
+- **Mod Geçişi:** "Bu site" ile "Global" arasında geçtikten hemen sonra yapılan bir tıklama (bir anahtar, Unlock All ya da Sıfırla) öbür kapsamın ayarlarına yazılabiliyordu. Artık ekranda görünen ayarlara yazılıyor.
+- **Kaydırma Geri Getirme:** Bir modal açıkken kaydırmayı sabitlenmiş sayfa gövdesiyle donduran sayfalarda sayfa artık en üste atlamıyor; modal kapanınca sayfa olduğu yere dönüyor.
+- **Print Unlock:** Kapatıldığında sayfanın kendi yazdırma işlevini artık geri veriyor.
+- **Sayfa Uyumu:** "closest" adlı bir form denetimi olan bir sayfa, Metin Seçimi ya da Kaydırma Geri Getirme açıkken artık kendi betiklerini bozmuyor; <div contenteditable> olarak yazılmış düzenleyiciler Kaydırma Geri Getirme açıkken ok tuşlarını koruyor.
+
 ## 1.0.12 - 2026-10-29
 
 **English**

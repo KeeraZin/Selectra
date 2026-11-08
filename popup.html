@@ -72,8 +72,16 @@
       <span class="domain-badge" id="domainBadge" data-i18n="badgeActiveTab">Active tab</span>
     </div>
     <div class="segmented-control" role="radiogroup" data-i18n-aria="modeGroupLabel">
-      <button class="segment-btn active" id="modeSiteBtn" role="radio" aria-checked="true" data-i18n="modeSite">This site</button>
-      <button class="segment-btn" id="modeGlobalBtn" role="radio" aria-checked="false" data-i18n="modeGlobal">Global</button>
+      <!-- Each label is there twice, stacked in one cell: a regular one and a semibold one (hidden from screen readers). The cell is as wide as the semibold one in both states,
+           so switching only swaps which of the two shows and nothing in the control changes size. -->
+      <button class="segment-btn active" id="modeSiteBtn" role="radio" aria-checked="true">
+        <span class="seg-label" data-i18n="modeSite">This site</span>
+        <span class="seg-label seg-label-bold" data-i18n="modeSite" aria-hidden="true">This site</span>
+      </button>
+      <button class="segment-btn" id="modeGlobalBtn" role="radio" aria-checked="false">
+        <span class="seg-label" data-i18n="modeGlobal">Global</span>
+        <span class="seg-label seg-label-bold" data-i18n="modeGlobal" aria-hidden="true">Global</span>
+      </button>
     </div>
   </div>
 
@@ -89,7 +97,6 @@
   <!-- Live Barrier Scanner Card -->
   <div class="diagnosis-card" id="diagnosisCard">
     <div class="diagnosis-header">
-      <span class="diagnosis-dot"></span>
       <span class="diagnosis-title" id="diagnosisTitle" data-i18n="scannerTitle">Protection Diagnosis</span>
     </div>
     <div class="diagnosis-body" id="diagnosisBody" data-i18n="scannerClean">No restrictions detected on this page</div>
@@ -99,7 +106,6 @@
   <!-- Status Bar -->
   <div class="status-bar" role="status" aria-live="polite">
     <div class="status-indicator">
-      <span class="status-dot"></span>
       <span class="status-text" id="statusText" data-i18n="statusAllOff">All controls off</span>
     </div>
     <span class="active-count" id="activeCount">0 active</span>
@@ -240,6 +246,23 @@
       </label>
     </div>
 
+    <div class="control-card action-card" id="screenshotCard" data-action="screenshot">
+      <div class="card-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+          <circle cx="12" cy="13" r="4"></circle>
+        </svg>
+      </div>
+      <div class="card-info">
+        <div class="card-title" id="titleScreenshot" data-i18n="featScreenshotTitle">Page Screenshot</div>
+        <div class="card-desc" id="descScreenshot" data-i18n="featScreenshotDesc">Save the full page or visible area as PNG</div>
+      </div>
+      <div class="card-actions" role="group" aria-labelledby="titleScreenshot">
+        <button type="button" class="shot-btn shot-btn-secondary" id="btnCaptureVisible" data-i18n="btnCaptureVisible" data-i18n-title="btnCaptureVisibleTitle" title="Capture visible area">Visible</button>
+        <button type="button" class="shot-btn shot-btn-primary" id="btnCaptureFull" data-i18n="btnCaptureFull" data-i18n-title="btnCaptureFullTitle" title="Capture full page">Full page</button>
+      </div>
+    </div>
+
     <!-- Group 3: Page Tools -->
     <div class="section-label" data-i18n="secPageTools">Page Tools</div>
 
@@ -286,7 +309,7 @@
         </svg>
       </div>
       <div class="card-info">
-        <div class="card-title" id="titleAntiBlur" data-i18n="featAntiBlurTitle">Reading Clarity & Anti-Blur</div>
+        <div class="card-title" id="titleAntiBlur" data-i18n="featAntiBlurTitle">Reading Clarity &amp; Anti-Blur</div>
         <div class="card-desc" id="descAntiBlur" data-i18n="featAntiBlurDesc">Restore text sharpness and readability on obscured pages</div>
       </div>
       <label class="toggle">
@@ -334,9 +357,8 @@
   <footer class="footer">
     <div class="footer-row">
       <div class="footer-status-badge">
-        <span class="status-pulse-dot" aria-hidden="true"></span>
         <span class="footer-status-label" data-i18n="footerText">Selectra</span>
-        <span class="footer-version-tag">v1.0.12</span>
+        <span class="footer-version-tag">v1.1.0</span>
       </div>
       <div class="footer-actions">
         <button id="contactBtn" class="footer-chip-btn" type="button">
@@ -374,6 +396,7 @@
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
     </svg>
     <p id="disabledMessageText" data-i18n="unsupportedPage">Extension cannot run on this system page.</p>
+    <p class="disabled-hint" id="disabledHint" data-i18n="unsupportedPageHint">Switch to any regular website tab to use Selectra.</p>
     <!-- Global mode is browser-wide: it has to be possible to leave it from a page the extension cannot run on, too -->
     <button type="button" class="notice-btn" id="disabledGlobalOff" hidden data-i18n="btnGlobalOff">Turn off Global mode</button>
   </div>
@@ -408,7 +431,6 @@
         <!-- Live Telemetry Inspector Bar -->
         <div class="modal-telemetry-strip">
           <div class="telemetry-site-group">
-            <span class="telemetry-beacon" id="contactTelemetryDot" aria-hidden="true"></span>
             <span class="telemetry-site-val" id="contactSiteDomain">example.com</span>
           </div>
           <div class="telemetry-badge-group">
@@ -475,7 +497,7 @@
               </svg>
               <span data-i18n="contactTelemetryDetails">Diagnostics included</span>
             </span>
-            <span class="telemetry-chip-code" id="telemetrySnippetBadge">v1.0.12</span>
+            <span class="telemetry-chip-code" id="telemetrySnippetBadge">v1.1.0</span>
           </summary>
           <div class="telemetry-details-body">
             <pre class="telemetry-code" id="telemetryCodePreview">Loading diagnostics...</pre>
@@ -503,7 +525,7 @@
         <button class="btn-modal primary" id="sendReportBtn" type="button">
           <span class="btn-label" data-i18n="btnOpenSupport">Copy &amp; open support</span>
           <span class="btn-icon-bubble" aria-hidden="true">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"></line>
               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
             </svg>

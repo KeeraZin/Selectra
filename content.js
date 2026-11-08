@@ -8,7 +8,7 @@
 
   const {
     FEATURE_KEYS, GLOBAL_SETTINGS_KEY, GLOBAL_MODE_KEY,
-    emptySettings, normalizeSettings, withoutTopOnly, siteKey, resolveSettings, getBaseDomain
+    emptySettings, normalizeSettings, withoutTopOnly, siteKey, resolveSettings, getBaseDomain, pickScrollPane, classifyFloating
   } = self.SelectraShared;
 
   const hostname = location.hostname;
@@ -16,6 +16,11 @@
   // relies on is taken now.
   const docCreateElement = Document.prototype.createElement;
   const elementClosest = Element.prototype.closest;
+  // (a form's control named "closest" is not seen from this world, as measured, but the call is never made on the element itself: one way to ask, and a failure is "no match")
+  const closestOf = (element, selector) => { try { return elementClosest.call(element, selector); } catch { return null; } };
+  // True while document.designMode is "on" because the Page Editor switched it on (not when the page's own editor had it on already): then every element of the page is "content editable"
+  // for the browser, which says nothing about the element and must not make the unlockers stand aside (the same rule as in the page-world script: an attribute counts, our own designMode does not).
+  let designModeIsOurs = false;
   const tagNameOf = Object.getOwnPropertyDescriptor(Element.prototype, 'tagName').get;
 
   // ─── On-Page Toast Translations ───
@@ -26,16 +31,16 @@
   // setting. Kept intentionally small: only the handful of strings actually
   // shown as toasts.
   const TOAST_I18N = {
-    en: { downloading: 'Downloading image...', downloaded: 'Image downloaded', copied: 'Text copied to clipboard', noSelection: 'No text selected', failed: 'Download failed', noImage: 'No image found here', copyFailed: 'Could not copy the text' },
-    tr: { downloading: 'Görsel indiriliyor...', downloaded: 'Görsel indirildi', copied: 'Metin panoya kopyalandı', noSelection: 'Kopyalanacak metin seçilmedi', failed: 'İndirilemedi', noImage: 'Burada indirilecek görsel bulunamadı', copyFailed: 'Metin kopyalanamadı' },
-    de: { downloading: 'Bild wird heruntergeladen...', downloaded: 'Bild heruntergeladen', copied: 'Text in die Zwischenablage kopiert', noSelection: 'Kein Text ausgewählt', failed: 'Download fehlgeschlagen', noImage: 'Hier wurde kein Bild gefunden', copyFailed: 'Text konnte nicht kopiert werden' },
-    fr: { downloading: "Téléchargement de l'image...", downloaded: 'Image téléchargée', copied: 'Texte copié dans le presse-papiers', noSelection: 'Aucun texte sélectionné', failed: 'Échec du téléchargement', noImage: 'Aucune image trouvée ici', copyFailed: 'Impossible de copier le texte' },
-    es: { downloading: 'Descargando imagen...', downloaded: 'Imagen descargada', copied: 'Texto copiado al portapapeles', noSelection: 'No hay texto seleccionado', failed: 'Error de descarga', noImage: 'No se encontró ninguna imagen aquí', copyFailed: 'No se pudo copiar el texto' },
-    pt: { downloading: 'Baixando imagem...', downloaded: 'Imagem baixada', copied: 'Texto copiado para a área de transferência', noSelection: 'Nenhum texto selecionado', failed: 'Falha no download', noImage: 'Nenhuma imagem encontrada aqui', copyFailed: 'Não foi possível copiar o texto' },
-    it: { downloading: "Download dell'immagine...", downloaded: 'Immagine scaricata', copied: 'Testo copiato negli appunti', noSelection: 'Nessun testo selezionato', failed: 'Download non riuscito', noImage: 'Nessuna immagine trovata qui', copyFailed: 'Impossibile copiare il testo' },
-    ru: { downloading: 'Загрузка изображения...', downloaded: 'Изображение загружено', copied: 'Текст скопирован в буфер обмена', noSelection: 'Текст не выделен', failed: 'Не удалось скачать', noImage: 'Здесь не найдено изображений', copyFailed: 'Не удалось скопировать текст' },
-    pl: { downloading: 'Pobieranie obrazu...', downloaded: 'Obraz pobrany', copied: 'Tekst skopiowany do schowka', noSelection: 'Nie zaznaczono tekstu', failed: 'Pobieranie nie powiodło się', noImage: 'Nie znaleziono tu obrazu', copyFailed: 'Nie udało się skopiować tekstu' },
-    nl: { downloading: 'Afbeelding downloaden...', downloaded: 'Afbeelding gedownload', copied: 'Tekst gekopieerd naar klembord', noSelection: 'Geen tekst geselecteerd', failed: 'Downloaden mislukt', noImage: 'Hier is geen afbeelding gevonden', copyFailed: 'Tekst kopiëren is mislukt' }
+    en: { downloading: 'Downloading image...', downloaded: 'Image downloaded', copied: 'Text copied to clipboard', noSelection: 'No text selected', failed: 'Download failed', noImage: 'No image found here', copyFailed: 'Could not copy the text', screenshotSaved: 'Page screenshot saved', screenshotTruncated: 'Page screenshot saved (cut at the maximum height)', screenshotFailed: 'Could not capture this page', screenshotJpeg: 'Saved as JPEG: the page is too large for a PNG', screenshotPartial: 'Saved what was loaded; this page keeps growing as you scroll', screenshotParts: 'Saved in {n} pictures: the page is very long', hudTitle: 'Capturing the full page', hudStep: 'Picture {current} of {total}', hudHint: 'Please don\'t scroll or click while it works', hudStop: 'Stop', hudSaving: 'Saving the picture…' },
+    tr: { downloading: 'Görsel indiriliyor...', downloaded: 'Görsel indirildi', copied: 'Metin panoya kopyalandı', noSelection: 'Kopyalanacak metin seçilmedi', failed: 'İndirilemedi', noImage: 'Burada indirilecek görsel bulunamadı', copyFailed: 'Metin kopyalanamadı', screenshotSaved: 'Sayfa ekran görüntüsü kaydedildi', screenshotTruncated: 'Ekran görüntüsü kaydedildi (en yüksek boyutta kesildi)', screenshotFailed: 'Bu sayfanın ekran görüntüsü alınamadı', screenshotJpeg: 'JPEG olarak kaydedildi: sayfa PNG için çok büyük', screenshotPartial: 'Yüklü kısım kaydedildi; bu sayfa kaydırdıkça uzamaya devam ediyor', screenshotParts: '{n} resim olarak kaydedildi: sayfa çok uzun', hudTitle: 'Tam sayfa çekiliyor', hudStep: 'Resim {current} / {total}', hudHint: 'Çalışırken kaydırmayın ve tıklamayın', hudStop: 'Durdur', hudSaving: 'Resim kaydediliyor…' },
+    de: { downloading: 'Bild wird heruntergeladen...', downloaded: 'Bild heruntergeladen', copied: 'Text in die Zwischenablage kopiert', noSelection: 'Kein Text ausgewählt', failed: 'Download fehlgeschlagen', noImage: 'Hier wurde kein Bild gefunden', copyFailed: 'Text konnte nicht kopiert werden', screenshotSaved: 'Seiten-Screenshot gespeichert', screenshotTruncated: 'Screenshot gespeichert (bei maximaler Höhe abgeschnitten)', screenshotFailed: 'Screenshot dieser Seite nicht möglich', screenshotJpeg: 'Als JPEG gespeichert: Die Seite ist für ein PNG zu groß', screenshotPartial: 'Geladener Teil gespeichert; diese Seite wird beim Scrollen immer länger', screenshotParts: 'In {n} Bildern gespeichert: die Seite ist sehr lang', hudTitle: 'Ganze Seite wird aufgenommen', hudStep: 'Bild {current} von {total}', hudHint: 'Bitte währenddessen nicht scrollen oder klicken', hudStop: 'Stopp', hudSaving: 'Bild wird gespeichert…' },
+    fr: { downloading: "Téléchargement de l'image...", downloaded: 'Image téléchargée', copied: 'Texte copié dans le presse-papiers', noSelection: 'Aucun texte sélectionné', failed: 'Échec du téléchargement', noImage: 'Aucune image trouvée ici', copyFailed: 'Impossible de copier le texte', screenshotSaved: 'Capture de la page enregistrée', screenshotTruncated: 'Capture enregistrée (coupée à la hauteur maximale)', screenshotFailed: 'Impossible de capturer cette page', screenshotJpeg: 'Enregistré en JPEG : la page est trop grande pour un PNG', screenshotPartial: "Partie chargée enregistrée ; cette page continue de s'allonger au défilement", screenshotParts: 'Enregistré en {n} images : la page est très longue', hudTitle: 'Capture de la page entière', hudStep: 'Image {current} sur {total}', hudHint: 'Ne faites pas défiler et ne cliquez pas pendant la capture', hudStop: 'Arrêter', hudSaving: 'Enregistrement de l\'image…' },
+    es: { downloading: 'Descargando imagen...', downloaded: 'Imagen descargada', copied: 'Texto copiado al portapapeles', noSelection: 'No hay texto seleccionado', failed: 'Error de descarga', noImage: 'No se encontró ninguna imagen aquí', copyFailed: 'No se pudo copiar el texto', screenshotSaved: 'Captura de página guardada', screenshotTruncated: 'Captura guardada (cortada en la altura máxima)', screenshotFailed: 'No se pudo capturar esta página', screenshotJpeg: 'Guardado como JPEG: la página es demasiado grande para un PNG', screenshotPartial: 'Se guardó lo cargado; esta página sigue creciendo al desplazarse', screenshotParts: 'Guardado en {n} imágenes: la página es muy larga', hudTitle: 'Capturando la página completa', hudStep: 'Imagen {current} de {total}', hudHint: 'No te desplaces ni hagas clic mientras trabaja', hudStop: 'Detener', hudSaving: 'Guardando la imagen…' },
+    pt: { downloading: 'Baixando imagem...', downloaded: 'Imagem baixada', copied: 'Texto copiado para a área de transferência', noSelection: 'Nenhum texto selecionado', failed: 'Falha no download', noImage: 'Nenhuma imagem encontrada aqui', copyFailed: 'Não foi possível copiar o texto', screenshotSaved: 'Captura da página salva', screenshotTruncated: 'Captura salva (cortada na altura máxima)', screenshotFailed: 'Não foi possível capturar esta página', screenshotJpeg: 'Salvo como JPEG: a página é grande demais para um PNG', screenshotPartial: 'O que estava carregado foi salvo; esta página continua crescendo ao rolar', screenshotParts: 'Salvo em {n} imagens: a página é muito longa', hudTitle: 'Capturando a página inteira', hudStep: 'Imagem {current} de {total}', hudHint: 'Não role nem clique enquanto trabalha', hudStop: 'Parar', hudSaving: 'Salvando a imagem…' },
+    it: { downloading: "Download dell'immagine...", downloaded: 'Immagine scaricata', copied: 'Testo copiato negli appunti', noSelection: 'Nessun testo selezionato', failed: 'Download non riuscito', noImage: 'Nessuna immagine trovata qui', copyFailed: 'Impossibile copiare il testo', screenshotSaved: 'Schermata della pagina salvata', screenshotTruncated: 'Schermata salvata (tagliata all\'altezza massima)', screenshotFailed: 'Impossibile acquisire questa pagina', screenshotJpeg: 'Salvato come JPEG: la pagina è troppo grande per un PNG', screenshotPartial: 'Salvata la parte caricata; questa pagina continua a crescere scorrendo', screenshotParts: 'Salvato in {n} immagini: la pagina è molto lunga', hudTitle: 'Acquisizione dell\'intera pagina', hudStep: 'Immagine {current} di {total}', hudHint: 'Non scorrere e non cliccare durante il lavoro', hudStop: 'Interrompi', hudSaving: 'Salvataggio dell\'immagine…' },
+    ru: { downloading: 'Загрузка изображения...', downloaded: 'Изображение загружено', copied: 'Текст скопирован в буфер обмена', noSelection: 'Текст не выделен', failed: 'Не удалось скачать', noImage: 'Здесь не найдено изображений', copyFailed: 'Не удалось скопировать текст', screenshotSaved: 'Снимок страницы сохранён', screenshotTruncated: 'Снимок сохранён (обрезан по максимальной высоте)', screenshotFailed: 'Не удалось сделать снимок страницы', screenshotJpeg: 'Сохранено как JPEG: страница слишком велика для PNG', screenshotPartial: 'Загруженная часть сохранена; страница продолжает расти при прокрутке', screenshotParts: 'Сохранено в {n} изображениях: страница очень длинная', hudTitle: 'Снимок всей страницы', hudStep: 'Изображение {current} из {total}', hudHint: 'Не прокручивайте и не нажимайте во время работы', hudStop: 'Стоп', hudSaving: 'Сохранение изображения…' },
+    pl: { downloading: 'Pobieranie obrazu...', downloaded: 'Obraz pobrany', copied: 'Tekst skopiowany do schowka', noSelection: 'Nie zaznaczono tekstu', failed: 'Pobieranie nie powiodło się', noImage: 'Nie znaleziono tu obrazu', copyFailed: 'Nie udało się skopiować tekstu', screenshotSaved: 'Zrzut ekranu strony zapisany', screenshotTruncated: 'Zrzut zapisany (przycięty do maksymalnej wysokości)', screenshotFailed: 'Nie udało się wykonać zrzutu strony', screenshotJpeg: 'Zapisano jako JPEG: strona jest zbyt duża dla pliku PNG', screenshotPartial: 'Zapisano załadowaną część; ta strona wydłuża się podczas przewijania', screenshotParts: 'Zapisano w {n} obrazach: strona jest bardzo długa', hudTitle: 'Przechwytywanie całej strony', hudStep: 'Obraz {current} z {total}', hudHint: 'Nie przewijaj ani nie klikaj podczas pracy', hudStop: 'Zatrzymaj', hudSaving: 'Zapisywanie obrazu…' },
+    nl: { downloading: 'Afbeelding downloaden...', downloaded: 'Afbeelding gedownload', copied: 'Tekst gekopieerd naar klembord', noSelection: 'Geen tekst geselecteerd', failed: 'Downloaden mislukt', noImage: 'Hier is geen afbeelding gevonden', copyFailed: 'Tekst kopiëren is mislukt', screenshotSaved: 'Schermafbeelding van pagina opgeslagen', screenshotTruncated: 'Schermafbeelding opgeslagen (afgekapt op de maximale hoogte)', screenshotFailed: 'Kon geen schermafbeelding van deze pagina maken', screenshotJpeg: 'Opgeslagen als JPEG: de pagina is te groot voor een PNG', screenshotPartial: 'Geladen deel opgeslagen; deze pagina wordt langer terwijl je scrolt', screenshotParts: 'Opgeslagen in {n} afbeeldingen: de pagina is erg lang', hudTitle: 'Volledige pagina vastleggen', hudStep: 'Afbeelding {current} van {total}', hudHint: 'Niet scrollen of klikken tijdens het werk', hudStop: 'Stop', hudSaving: 'Afbeelding opslaan…' }
   };
   const knownToastLang = (lang) => typeof lang === 'string' && Object.hasOwn(TOAST_I18N, lang);
   let toastLang = (() => {
@@ -47,9 +52,10 @@
     } catch {}
     return 'en';
   })();
-  function T(key) {
+  function T(key, params) {
     const table = TOAST_I18N[knownToastLang(toastLang) ? toastLang : 'en'];
-    return (Object.hasOwn(table, key) && table[key]) || TOAST_I18N.en[key] || '';
+    const text = (Object.hasOwn(table, key) && table[key]) || TOAST_I18N.en[key] || '';
+    return params ? text.replace(/\{(\w+)\}/g, (whole, name) => (Object.hasOwn(params, name) && params[name] !== undefined ? String(params[name]) : whole)) : text;
   }
   chrome.storage.local.get('superUnlockerLang').then(data => {
     if (knownToastLang(data?.superUnlockerLang)) toastLang = data.superUnlockerLang;
@@ -318,8 +324,8 @@
         tag === 'input' ||
         tag === 'textarea' ||
         tag === 'select' ||
-        target.isContentEditable === true ||
-        !!elementClosest.call(target, '[contenteditable="true"]')
+        (target.isContentEditable === true && !designModeIsOurs) ||
+        !!closestOf(target, '[contenteditable]:not([contenteditable="false"])')
       );
     }
 
@@ -367,8 +373,8 @@
             ':host { display: block !important; position: fixed !important; right: 24px !important; bottom: 24px !important; left: auto !important; top: auto !important;',
             '  width: auto !important; height: auto !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: none !important;',
             '  overflow: visible !important; z-index: 2147483647 !important; pointer-events: none !important; direction: ltr !important; letter-spacing: normal !important; text-transform: none !important; }',
-            '.box { box-sizing: border-box; max-width: min(420px, calc(100vw - 48px)); padding: 10px 16px; border-radius: 12px; background: rgba(15,23,42,0.95); color: #f8fafc;',
-            '  border: 1px solid rgba(255,255,255,0.15); font: 500 13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.45);',
+            '.box { box-sizing: border-box; max-width: min(420px, calc(100vw - 48px)); padding: 10px 16px; border-radius: 16px; background: #161616; color: #fafafa;',
+            '  border: 1px solid rgba(255,255,255,0.16); font: 500 13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; box-shadow: 0 14px 36px rgba(0,0,0,.55);',
             '  opacity: 0; transform: translateY(12px); transition: opacity .2s cubic-bezier(0.4,0,0.2,1), transform .2s cubic-bezier(0.4,0,0.2,1); }',
             '.box.show { opacity: 1; transform: translateY(0); }',
             '@media (prefers-reduced-motion: reduce) { .box { transition: none; } }'
@@ -920,22 +926,6 @@
       return tag;
     }
 
-    static getVisibilityInfo(element) {
-      if (!(element instanceof Element)) return { visible: false };
-      try {
-        const style = window.getComputedStyle(element);
-        const rect = element.getBoundingClientRect();
-        return {
-          visible: style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0',
-          position: style.position,
-          width: rect.width,
-          height: rect.height
-        };
-      } catch {
-        return { visible: false };
-      }
-    }
-
     static getHistoricalDiagnosis() {
       const messages = [];
       let copyBlockCount = 0;
@@ -1223,7 +1213,7 @@
   const isAppSurface = (event) => {
     try {
       const first = event.composedPath ? event.composedPath()[0] : event.target;
-      return first instanceof Element && !!first.closest('canvas, [role="application"]');
+      return first instanceof Element && !!closestOf(first, 'canvas, [role="application"]');
     } catch {
       return false;
     }
@@ -1525,6 +1515,7 @@
         bodySpellcheck: document.body?.getAttribute('spellcheck')
       };
 
+      designModeIsOurs = this.original.designMode !== 'on';
       document.designMode = 'on';
       document.documentElement?.setAttribute('spellcheck', 'false');
       document.body?.setAttribute('spellcheck', 'false');
@@ -1539,6 +1530,7 @@
       if (!this.enabled) return;
       const original = this.original;
       super.disable();
+      designModeIsOurs = false;
 
       if (original) {
         document.designMode = original.designMode || 'off';
@@ -1647,7 +1639,7 @@
   const onEditorSurface = (event) => {
     try {
       const first = event.composedPath ? event.composedPath()[0] : event.target;
-      return first instanceof Element && !!first.closest(EDITOR_SURFACE);
+      return first instanceof Element && !!closestOf(first, EDITOR_SURFACE);
     } catch {
       return false;
     }
@@ -1748,7 +1740,7 @@
         first.style.webkitUserDrag = 'element';
         first.style.userDrag = 'element';
         // inside a link the browser would drag the link instead of the picture
-        const clickable = first.closest('a[href], [role="link"], button');
+        const clickable = closestOf(first, 'a[href], [role="link"], button');
         if (clickable && clickable !== first) {
           this.remember(clickable);
           clickable.setAttribute('draggable', 'false');
@@ -1973,7 +1965,7 @@
         if (!SelectraImage.collectCandidates(probe).length) {
           // A picture with nothing to save (a cross-origin canvas, a video without a poster) inside a link: Alt+Click on a link makes the
           // browser download the linked PAGE (an .html file). That click is taken over and the user is told instead.
-          if (probe.some(el => SelectraImage.isImageLike(el)) && probe.some(el => el.closest && el.closest('a[href]'))) {
+          if (probe.some(el => SelectraImage.isImageLike(el)) && probe.some(el => closestOf(el, 'a[href]'))) {
             event.preventDefault();
             event.stopPropagation();
             DOMUtils.showToast(T('noImage'));
@@ -2056,6 +2048,7 @@
       this.checkTimer = null;
       this.observer = null;
       this.bodyObserved = false;
+      this.frozenTop = null; // the top value of the freeze that the page was last shown at (see check)
     }
 
     enable(config) {
@@ -2166,6 +2159,7 @@
         document.documentElement?.classList.remove('su-scroll-unlocked', 'su-scroll-unlocked-height', 'su-scrollbar-visible');
         document.body?.classList.remove('su-scroll-unlocked', 'su-scroll-unlocked-height', 'su-scrollbar-visible', 'su-scroll-fixed-restored');
         document.querySelectorAll('.su-container-unlocked').forEach(el => el.classList.remove('su-container-unlocked'));
+        this.frozenTop = null;
       });
     }
 
@@ -2179,6 +2173,9 @@
       // (overflow, height, position): measuring with them applied makes the lock look gone, the classes get
       // removed, the lock comes back, and the page flickers between both states forever.
       const OVERRIDES = ['su-scroll-unlocked', 'su-scroll-unlocked-height', 'su-scroll-fixed-restored'];
+      // Where the person is now. The measure below takes the overrides off, which freezes a page that a modal fixed (position: fixed) for a moment, and a frozen page cannot be
+      // scrolled: the position went back to the top every time the page was looked at, and a page that had been shown where its modal found it ended up at the top.
+      const keepY = window.scrollY;
       const hadOnHtml = OVERRIDES.filter(c => html.classList.contains(c));
       const hadOnBody = OVERRIDES.filter(c => body.classList.contains(c));
       // the containers this script forced open are measured as the page styled them too: a forced one would otherwise look like a pane that scrolls by itself
@@ -2210,15 +2207,22 @@
         return;
       }
 
-      // Handle mobile/modal freeze: body { position: fixed; top: -...px }
+      // Handle mobile/modal freeze: body { position: fixed; top: -...px }. The class shows the page unfrozen (its own top value is overridden there, and it stays in the
+      // style attribute: the page reads it when its modal is closed, to scroll back to where it was). The first look at a freeze shows the page where the freeze found it; every
+      // later look leaves the person where they are.
       if (bodyFixed && blocked) {
         const parsedTop = parseInt(savedTop, 10);
         body.classList.add('su-scroll-fixed-restored');
         if (!isNaN(parsedTop) && parsedTop < 0) {
-          const scrollY = Math.abs(parsedTop);
-          body.style.top = '';
-          window.scrollTo(0, scrollY);
+          if (this.frozenTop !== parsedTop) {
+            this.frozenTop = parsedTop;
+            window.scrollTo(0, Math.abs(parsedTop));
+          } else if (keepY > 0 && Math.abs(window.scrollY - keepY) > 1) {
+            window.scrollTo(0, keepY);
+          }
         }
+      } else {
+        this.frozenTop = null;
       }
 
       html.classList.toggle('su-scroll-unlocked', blocked);
@@ -2393,6 +2397,951 @@
     }
   };
 
+  // ─── Full-Page Screenshot Scroll & Fixed-Element Coordinator ───
+  // Coordinates scrolling and temporary hiding of repeating fixed/sticky bars while the service worker captures and stitches viewport slices.
+  // The slices stay in the service worker's OffscreenCanvas. The only picture that reaches this script is the finished one, and only when it is bigger
+  // than a data: URL can carry: it then comes in pieces, to get a temporary file reference (BlobTransfer above), exactly as a large picture does.
+  const MAX_CAPTURE_SLICES = 200; // pictures of one page at most; a page that is taller than one canvas can be is saved in several pictures by the service worker
+  // A page that is longer than it was when the capture began is followed for this many rounds at most (heights that settle as things are rendered); a page that
+  // goes on growing after that is an endless one (a feed that loads more as it is scrolled): what was open is saved, and the person is told.
+  const MAX_GROWTH_ROUNDS = 2;
+  const SLICE_OVERLAP = 8; // CSS px
+  // The card stays on the page through the pictures in the middle of a capture. What it covers (a band at the bottom edge of the window: 28 px from the edge, 116 px
+  // tall, and the 28 px its shadow reaches above it) is not used from those pictures, the next picture has those rows, so the steps are shorter by that band. The
+  // first picture (a bar that is fixed to the window is in it and gone from the others) and the last one (what lies under a pane, a bar that closes the page) are
+  // taken with the card away, which is why it fades in after the first picture and is gone for the last. A window or pane that would be left too low once the band is
+  // cut out is photographed the old way: the card away for every picture.
+  const HUD_BAND = 176; // CSS px, from the bottom edge of the window
+  const HUD_MIN_USABLE = 0.66; // the share of the pane that a picture in the middle must still give
+  const SCREENSHOT_STYLE_ID = 'su-screenshot-temp-style';
+  const SCREENSHOT_WATCHDOG_MS = 30000; // a capture that has not been heard from for this long is over: the service worker is gone, the page puts itself back
+
+  // ─── The card on the page while a full-page picture is taken ───
+  // It lives in a shadow tree of its own in the top layer (the page can neither read nor restyle it). It is gone at the instant of every picture (hold: the
+  // service worker asks for it), comes back with a fade (release), counts the pictures, and has a Stop button. A transparent shield under it keeps the mouse
+  // from touching the page meanwhile. While the pictures are turned into files it says so (saving), and a timer takes it away if the worker never comes back.
+  const HUD_CSS = ":host { display: block !important; position: fixed !important; inset: 0 !important; width: auto !important; height: auto !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: none !important; overflow: visible !important; z-index: 2147483647 !important; pointer-events: none !important; direction: ltr !important; }\n.shield { position: fixed; inset: 0; pointer-events: auto; cursor: progress; background: transparent; }\n.shield.off { pointer-events: none; cursor: auto; }\n.wrap { position: fixed; left: 50%; bottom: 28px; opacity: 0; transform: translate(-50%, 14px) scale(0.985); pointer-events: none;\n  transition: opacity .34s cubic-bezier(.22,1,.36,1), transform .34s cubic-bezier(.22,1,.36,1); }\n.wrap.show { opacity: 1; transform: translate(-50%, 0) scale(1); pointer-events: auto; }\n.wrap.hold { opacity: 0 !important; transition: none !important; }\n.card { box-sizing: border-box; width: min(392px, calc(100vw - 32px)); padding: 14px 14px 16px 16px; border-radius: 24px; color: #fbfbfb;\n  font: 500 13px/1.4 Inter, \"Segoe UI\", system-ui, -apple-system, Roboto, sans-serif; letter-spacing: 0; text-align: left;\n  background: linear-gradient(180deg, #1c1c1d, #141414); /* no backdrop-filter: it changes how the page below is drawn (its text loses the browser's own anti-aliasing), and the pictures must be the page as it is; so the card is solid, a see-through one without a blur shows the page's text through it */\n  border: 1px solid rgba(255,255,255,.12); box-shadow: 0 8px 32px rgba(0,0,0,.42), 0 2px 6px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.07); }\n.row { display: flex; align-items: center; gap: 12px; }\n.ring { flex: none; width: 34px; height: 34px; border-radius: 50%; background: conic-gradient(from 0deg, rgba(16,185,129,0) 0%, #10b981 62%, #33c6ab 100%);\n  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));\n  animation: spin 1s linear infinite; filter: drop-shadow(0 0 6px rgba(16,185,129,.45)); }\n.text { flex: 1; min-width: 0; }\n.title { font-size: 13.5px; font-weight: 650; letter-spacing: -.005em; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* (the card is always 116 px tall, in every language and window: the band the pictures leave out is made for that) */\n.sub { margin-top: 2px; font-size: 12px; font-weight: 500; color: #a1a2a7; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n.stop { flex: none; appearance: none; display: inline-flex; align-items: center; gap: 7px; margin: 0; border: 1px solid rgba(255,255,255,.13); background: rgba(255,255,255,.07); color: #fff;\n  font: 600 12.5px/1 inherit; border-radius: 999px; padding: 8px 8px 8px 15px; cursor: pointer; transition: background .2s ease, border-color .2s ease, transform .15s ease, opacity .2s ease; }\n.stop:hover { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.22); }\n.stop:active { transform: scale(.96); }\n.stop:focus-visible { outline: 2px solid #33c6ab; outline-offset: 2px; }\n.stop:disabled { opacity: .5; cursor: default; }\n.stop[hidden] { display: none; }\n.stop kbd { font: 600 10.5px/1 inherit; padding: 3px 6px; border-radius: 7px; background: rgba(255,255,255,.11); color: #cfd2d3; }\n.bar { position: relative; height: 5px; margin-top: 14px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }\n.fill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; border-radius: inherit; overflow: hidden; background: linear-gradient(90deg, #10b981, #33c6ab);\n  box-shadow: 0 0 14px rgba(16,185,129,.5); transition: width .6s cubic-bezier(.22,1,.36,1); }\n.fill::after { content: \"\"; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent); transform: translateX(-100%); animation: shimmer 1.7s ease-in-out infinite; }\n.bar.indeterminate .fill { width: 38%; transition: none; animation: slide 1.25s cubic-bezier(.4,0,.2,1) infinite; }\n.hint { margin-top: 11px; font-size: 11.5px; font-weight: 500; color: #85868b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n.hint:empty { display: none; }\n@keyframes spin { to { transform: rotate(360deg); } }\n@keyframes shimmer { to { transform: translateX(100%); } }\n@keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(263%); } }\n@media (prefers-reduced-motion: reduce) { .wrap { transform: translate(-50%, 0); transition: opacity .2s linear; } .ring, .fill::after, .bar.indeterminate .fill { animation: none; } .fill { transition: none; } }";
+  const CaptureHud = {
+    host: null,
+    parts: null,
+    timer: 0,
+    stopped: false,
+    heavy: false, // the page was slow to show the card gone: it stays gone for the rest of the capture, no picture may have it
+
+    ensure() {
+      if (this.host && this.host.isConnected) return true;
+      try {
+        const XHTML = 'http://www.w3.org/1999/xhtml';
+        const make = (tag, className) => { const el = document.createElementNS(XHTML, tag); if (className) el.className = className; return el; };
+        const host = make('selectra-capture-hud');
+        const root = host.attachShadow({ mode: 'closed' });
+        const style = make('style');
+        style.textContent = HUD_CSS;
+        const shield = make('div', 'shield');
+        const wrap = make('div', 'wrap');
+        wrap.setAttribute('role', 'status');
+        wrap.setAttribute('aria-live', 'polite');
+        const card = make('div', 'card');
+        const row = make('div', 'row');
+        const ring = make('div', 'ring');
+        const text = make('div', 'text');
+        const title = make('div', 'title');
+        const sub = make('div', 'sub');
+        text.append(title, sub);
+        const stop = make('button', 'stop');
+        stop.type = 'button';
+        const stopLabel = make('span');
+        const kbd = make('kbd');
+        kbd.textContent = 'Esc';
+        stop.append(stopLabel, kbd);
+        row.append(ring, text, stop);
+        const bar = make('div', 'bar');
+        const fill = make('div', 'fill');
+        bar.append(fill);
+        const hint = make('div', 'hint');
+        card.append(row, bar, hint);
+        wrap.append(card);
+        root.append(style, shield, wrap);
+        stop.addEventListener('click', (event) => { if (event.isTrusted) ScreenshotCoordinator.requestStop(); }); // (only a real click: the page cannot press it)
+        host.setAttribute('popover', 'manual');
+        (document.fullscreenElement || document.documentElement).appendChild(host);
+        try { host.showPopover(); } catch {} // the top layer, where the browser has one; otherwise the z-index does the work
+        this.host = host;
+        this.parts = { wrap, shield, title, sub, stop, stopLabel, fill, bar, hint };
+        return true;
+      } catch {
+        this.host = null;
+        this.parts = null;
+        return false;
+      }
+    },
+
+    /** (Re)starts the countdown that takes the card away if nobody ever tells it that the work is over. */
+    arm() {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => this.remove(), 60000);
+    },
+
+    /** `held`: it starts away (the shield is up at once, the card fades in when the first picture is taken and the service worker lets it go). */
+    show(current, total, { held = false } = {}) {
+      if (!this.ensure()) return;
+      const { wrap, shield, stop, stopLabel, title, hint, bar } = this.parts;
+      this.stopped = false;
+      this.heavy = false;
+      title.textContent = T('hudTitle');
+      hint.textContent = T('hudHint');
+      stopLabel.textContent = T('hudStop');
+      stop.hidden = false;
+      stop.disabled = false;
+      bar.classList.remove('indeterminate');
+      shield.classList.remove('off');
+      wrap.classList.toggle('hold', held);
+      this.update(current, total);
+      requestAnimationFrame(() => { if (this.parts && this.parts.wrap === wrap) wrap.classList.add('show'); });
+      this.arm();
+    },
+
+    update(current, total) {
+      if (!this.parts) return;
+      const done = Math.max(0, Math.min(1, total > 0 ? current / total : 0));
+      this.parts.sub.textContent = T('hudStep', { current, total });
+      this.parts.fill.style.width = (done * 100).toFixed(1) + '%';
+      this.arm();
+    },
+
+    /** Gone at once, and painted away, for the instant of a picture. */
+    async hold() {
+      if (!this.parts) return;
+      const started = performance.now();
+      this.parts.wrap.classList.add('hold');
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      if (performance.now() - started > 220) this.heavy = true;
+    },
+
+    release() {
+      if (this.parts && !this.heavy) this.parts.wrap.classList.remove('hold');
+    },
+
+    /** The pictures are all taken: the page is as it was and the card tells that the file is being made. */
+    saving() {
+      if (!this.parts) return;
+      const { wrap, shield, stop, title, sub, hint, bar } = this.parts;
+      title.textContent = T('hudSaving');
+      sub.textContent = '';
+      hint.textContent = '';
+      stop.hidden = true;
+      bar.classList.add('indeterminate');
+      shield.classList.add('off');
+      wrap.classList.remove('hold');
+      this.arm();
+    },
+
+    remove() {
+      clearTimeout(this.timer);
+      const { host, parts } = this;
+      this.host = null;
+      this.parts = null;
+      if (!host) return;
+      try { parts?.wrap.classList.remove('show'); parts?.shield.classList.add('off'); } catch {}
+      setTimeout(() => { try { host.remove(); } catch {} }, 380); // after the fade
+    }
+  };
+
+  const ScreenshotCoordinator = {
+    state: null,
+
+    /** The person presses Stop on the card: the picture that is under way is the last. */
+    requestStop() {
+      if (this.state) this.state.cancelled = true;
+      if (CaptureHud.parts) { CaptureHud.parts.stop.disabled = true; }
+    },
+
+    findScrollTarget(viewportWidth, viewportHeight) {
+      const html = document.documentElement;
+      const body = document.body;
+      const docScroller = document.scrollingElement || html || body;
+      const docHeight = Math.max(
+        docScroller ? docScroller.scrollHeight : 0,
+        html ? html.scrollHeight : 0,
+        body ? body.scrollHeight : 0
+      );
+      const htmlOverflow = html ? getComputedStyle(html).overflowY : 'visible';
+      const bodyOverflow = body ? getComputedStyle(body).overflowY : 'visible';
+      const docHidden = htmlOverflow === 'hidden' || htmlOverflow === 'clip' || bodyOverflow === 'hidden' || bodyOverflow === 'clip';
+
+      // Look for an inner scrollable pane when the document itself is clamped/hidden or does not scroll.
+      if (docHidden || docHeight <= viewportHeight + 15) {
+        const candidates = [];
+        const seen = new Set();
+        [[0.5, 0.5], [0.5, 0.25], [0.5, 0.75], [0.25, 0.5], [0.75, 0.5]].forEach(([fx, fy], pointIndex) => {
+          let stack = [];
+          try { stack = this.deepElementsFromPoint(Math.round(viewportWidth * fx), Math.round(viewportHeight * fy)); } catch {}
+          for (const start of stack) {
+            for (let el = start; el instanceof Element && el !== body && el !== html && !seen.has(el); el = this.parentOrHost(el)) {
+              seen.add(el);
+              const oy = getComputedStyle(el).overflowY;
+              if (oy !== 'auto' && oy !== 'scroll' && oy !== 'overlay') continue;
+              const r = el.getBoundingClientRect();
+              candidates.push({ el, rect: { left: r.left, top: r.top, width: r.width, height: r.height }, scrollSpan: el.scrollHeight - el.clientHeight, atCenter: pointIndex === 0 });
+            }
+          }
+        });
+        const picked = pickScrollPane(candidates, { width: viewportWidth, height: viewportHeight });
+        const bestPane = picked >= 0 ? candidates[picked].el : null;
+        if (bestPane) {
+          const rect = bestPane.getBoundingClientRect();
+          const paneTop = Math.max(0, Math.round(rect.top));
+          const paneLeft = Math.max(0, Math.round(rect.left));
+          const paneHeight = Math.max(100, Math.min(viewportHeight - paneTop, Math.round(rect.height || bestPane.clientHeight)));
+          const paneWidth = Math.max(100, Math.min(viewportWidth - paneLeft, Math.round(rect.width || bestPane.clientWidth)));
+          const bottomTail = Math.max(0, viewportHeight - (paneTop + paneHeight));
+          const midY = Math.min(viewportHeight - 1, Math.max(0, Math.round(paneTop + paneHeight * 0.5)));
+          const leftGutterBg = paneLeft > 2 ? this.resolveOpaqueBackground(Math.max(1, Math.round(paneLeft * 0.5)), midY) : '';
+          const rightGutterStart = paneLeft + paneWidth;
+          const rightGutterBg = rightGutterStart < viewportWidth - 2
+            ? this.resolveOpaqueBackground(Math.min(viewportWidth - 2, Math.round(rightGutterStart + (viewportWidth - rightGutterStart) * 0.5)), midY)
+            : '';
+          let fullWidthFooter = true;
+          if (bottomTail > 2 && paneLeft > 2) {
+            const footerMidY = Math.min(viewportHeight - 1, Math.round(paneTop + paneHeight + bottomTail * 0.5));
+            const leftMidEl = document.elementFromPoint(Math.max(1, Math.round(paneLeft * 0.5)), midY);
+            const leftBotEl = document.elementFromPoint(Math.max(1, Math.round(paneLeft * 0.5)), footerMidY);
+            const paneBotEl = document.elementFromPoint(Math.min(viewportWidth - 1, Math.round(paneLeft + paneWidth * 0.5)), footerMidY);
+            if (leftMidEl && leftBotEl && paneBotEl) {
+              // If the bottom-left corner belongs to the same sidebar subtree as mid-left (and not to the footer under the pane), the sidebar is full-height.
+              const sharedWithSidebar = leftMidEl === leftBotEl || this.containsDeep(leftMidEl, leftBotEl) || this.containsDeep(leftBotEl, leftMidEl)
+                || this.shareSidebarColumn(leftMidEl, leftBotEl, bestPane);
+              const sharedWithFooter = paneBotEl === leftBotEl || this.containsDeep(paneBotEl, leftBotEl) || this.containsDeep(leftBotEl, paneBotEl);
+              if (sharedWithSidebar && !sharedWithFooter) fullWidthFooter = false;
+            }
+          }
+          return {
+            target: bestPane,
+            isWindow: false,
+            paneTop,
+            paneLeft,
+            paneHeight,
+            paneWidth,
+            paneBottom: rect.bottom, // exact: on a window of 750.4 px the pane ends between two screen pixels, and what lies under it starts at the next one
+            leftGutterBg,
+            rightGutterBg,
+            fullWidthFooter,
+            scrollHeight: bestPane.scrollHeight
+          };
+        }
+      }
+
+      return {
+        target: docScroller,
+        isWindow: true,
+        paneTop: 0,
+        paneLeft: 0,
+        paneHeight: viewportHeight,
+        paneWidth: viewportWidth,
+        paneBottom: viewportHeight,
+        leftGutterBg: '',
+        rightGutterBg: '',
+        fullWidthFooter: true,
+        scrollHeight: Math.max(docHeight, viewportHeight)
+      };
+    },
+
+    parentOrHost(el) {
+      if (!el) return null;
+      if (el.parentElement) return el.parentElement;
+      const root = el.getRootNode ? el.getRootNode() : null;
+      return root && root.host instanceof Element ? root.host : null;
+    },
+
+    // Standard Node.contains() returns false across ShadowRoot boundaries; this walks up shadow hosts as well.
+    containsDeep(container, node) {
+      if (!container || !node) return false;
+      let cur = node;
+      while (cur) {
+        if (cur === container) return true;
+        if (typeof container.contains === 'function' && container.contains(cur)) return true;
+        const root = cur.getRootNode ? cur.getRootNode() : null;
+        cur = root && root.host instanceof Element ? root.host : null;
+      }
+      return false;
+    },
+
+    deepElementsFromPoint(x, y) {
+      const result = [];
+      const seen = new Set();
+      const collect = (root) => {
+        if (!root || typeof root.elementsFromPoint !== 'function') return;
+        let list = [];
+        try { list = root.elementsFromPoint(x, y) || []; } catch {}
+        for (const el of list) {
+          if (!(el instanceof Element) || seen.has(el)) continue;
+          seen.add(el);
+          if (el.shadowRoot) collect(el.shadowRoot);
+          result.push(el);
+        }
+      };
+      collect(document);
+      return result;
+    },
+
+    shareSidebarColumn(a, b, pane) {
+      let cur = a;
+      while (cur && cur !== document.body && cur !== document.documentElement) {
+        if (!this.containsDeep(cur, pane) && this.containsDeep(cur, b)) return true;
+        cur = this.parentOrHost(cur);
+      }
+      return false;
+    },
+
+    resolveOpaqueBackground(x, y) {
+      const stack = this.deepElementsFromPoint(x, y);
+      if (document.body && !stack.includes(document.body)) stack.push(document.body);
+      if (document.documentElement && !stack.includes(document.documentElement)) stack.push(document.documentElement);
+      for (const el of stack) {
+        if (!(el instanceof Element)) continue;
+        const bg = getComputedStyle(el).backgroundColor;
+        if (!bg || bg === 'transparent') continue;
+        const m = bg.match(/rgba?\(\s*(\d+)\s*[, ]\s*(\d+)\s*[, ]\s*(\d+)(?:\s*[,/]\s*([0-9.]+))?\s*\)/i);
+        if (m) {
+          const alpha = m[4] !== undefined ? Number(m[4]) : 1;
+          if (alpha >= 0.95) return `rgb(${m[1]}, ${m[2]}, ${m[3]})`;
+        }
+      }
+      return '';
+    },
+
+    // Traverses layout elements in the document (and any open Shadow DOMs) while pruning non-layout subtrees (<svg>, <canvas>, etc.) and inline
+    // syntax-highlighting token spans inside <pre>/<code>, so that a page of 40,000 code tokens does not use up the walk before the sticky footer or the floating
+    // button at the end of it. 200,000 elements cost about 0.4 s; the limit is there for pages that build the DOM without end.
+    forEachLayoutElement(visitor, maxElements = 200000) {
+      if (!document.body) return;
+      const skipSubtreeTags = new Set(['SVG', 'MATH', 'CANVAS', 'VIDEO', 'AUDIO', 'SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'IFRAME']);
+      const inlineTokenTags = new Set(['SPAN', 'B', 'I', 'EM', 'STRONG', 'SMALL', 'SUB', 'SUP', 'MARK', 'VAR', 'KBD', 'SAMP', 'WBR', 'BR']);
+      const stack = [{ el: document.body, inCode: false }];
+      let visited = 0;
+      while (stack.length > 0 && visited < maxElements) {
+        const { el, inCode } = stack.pop();
+        if (!(el instanceof Element)) continue;
+        const tag = el.tagName;
+        if (skipSubtreeTags.has(tag)) continue;
+        if (inCode && inlineTokenTags.has(tag) && el.childElementCount === 0 && !el.shadowRoot) continue;
+
+        visited++;
+        if (el instanceof HTMLElement) visitor(el);
+
+        const nextInCode = inCode || tag === 'CODE' || tag === 'PRE';
+        if (el.shadowRoot) {
+          const sChildren = el.shadowRoot.children;
+          for (let i = sChildren.length - 1; i >= 0; i--) stack.push({ el: sChildren[i], inCode: nextInCode });
+        }
+        const children = el.children;
+        for (let i = children.length - 1; i >= 0; i--) stack.push({ el: children[i], inCode: nextInCode });
+      }
+    },
+
+    prepare(watchdogMs = SCREENSHOT_WATCHDOG_MS) {
+      this.cleanup();
+      DOMUtils.dropToast();
+
+      // First of all: no scrollbars, no smooth scrolling and no snapping. Without a scrollbar the text has more room and wraps differently, so the page gets
+      // SHORTER; measured before, its height (and every slice planned from it) would be wrong, and the last slices would be printed over the ones above.
+      // A page that snaps its scrolling to fixed points would land on the nearest one instead of where the slice is planned, and leave gaps.
+      // Everything takes clicks for the time being: what the page made click-through (a wrapper of the input area) can then be found by asking the browser what lies where.
+      DOMUtils.injectStyle(
+        SCREENSHOT_STYLE_ID,
+        'html, body, * { scroll-behavior: auto !important; scroll-snap-type: none !important; scrollbar-width: none !important; pointer-events: auto !important; } ::-webkit-scrollbar { display: none !important; }'
+      );
+      void (document.documentElement || document.body)?.offsetHeight; // lay the page out with that style before anything is measured
+
+      const html = document.documentElement;
+      const viewportWidth = Math.max(1, window.innerWidth || (html ? html.clientWidth : 0) || 800);
+      const viewportHeight = Math.max(1, window.innerHeight || (html ? html.clientHeight : 0) || 600);
+      const dpr = Math.max(1, Number(window.devicePixelRatio) || 1);
+
+      const {
+        target,
+        isWindow,
+        paneTop,
+        paneLeft,
+        paneHeight,
+        paneWidth,
+        paneBottom,
+        leftGutterBg,
+        rightGutterBg,
+        fullWidthFooter,
+        scrollHeight
+      } = this.findScrollTarget(viewportWidth, viewportHeight);
+      const initialWinX = window.scrollX || 0;
+      const initialWinY = window.scrollY || 0;
+      const initialTargetLeft = target ? target.scrollLeft || 0 : 0;
+      const initialTargetTop = target ? target.scrollTop || 0 : 0;
+
+      const bottomTail = isWindow ? 0 : Math.max(0, viewportHeight - (paneTop + paneHeight));
+      const cardTop = this.cardBandTop(paneTop, paneHeight, viewportHeight); // null: the card is away for every picture
+      const bandRows = cardTop === null ? 0 : Math.max(0, paneTop + paneHeight - cardTop);
+      const step = Math.max(40, paneHeight - SLICE_OVERLAP - bandRows);
+      const capCssHeight = Math.max(viewportHeight, paneTop + step * (MAX_CAPTURE_SLICES - 1) + paneHeight + bottomTail);
+
+      const state = {
+        target,
+        isWindow,
+        paneTop,
+        paneLeft,
+        paneHeight,
+        paneWidth,
+        bottomTail,
+        step,
+        capCssHeight,
+        slicesCount: 1,
+        truncated: false,
+        viewportWidth,
+        viewportHeight,
+        initialWinX,
+        initialWinY,
+        initialTargetLeft,
+        initialTargetTop,
+        hiddenEls: [],
+        bottomDocks: [],
+        hidden: new Set(),
+        unstuck: new Set(),
+        unstuckEls: [],
+        stationary: new Set(), // what stays where it is on the screen while the page is scrolled, found by scrolling it a little (probeStationary)
+        probed: false,
+        growthRounds: 0,
+        initialScrollHeight: 0,
+        cancelled: false,
+        onKeyDown: null
+      };
+
+      state.onKeyDown = (event) => {
+        if (event.key === 'Escape' && event.isTrusted) state.cancelled = true; // (a page could send itself an Escape to spoil a capture)
+      };
+      window.addEventListener('keydown', state.onKeyDown, true);
+      // The person's own scrolling is held off for the time of the capture: a wheel turn or a key between the scroll and the picture puts the picture at a
+      // place the page was not asked to go, and the picture then shows one part twice and another not at all. Only the person's input (isTrusted) is
+      // stopped, and only what scrolls; what the page does by itself is dealt with by the check after every picture (screenshotVerify).
+      state.holdOff = (event) => { if (event.isTrusted) { event.preventDefault(); event.stopImmediatePropagation(); } };
+      state.holdOffKey = (event) => {
+        if (event.isTrusted && ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar'].includes(event.key)) { event.preventDefault(); event.stopImmediatePropagation(); }
+      };
+      state.holdOffMiddle = (event) => { if (event.isTrusted && event.button === 1) { event.preventDefault(); event.stopImmediatePropagation(); } }; // (the autoscroll of the middle button)
+      window.addEventListener('wheel', state.holdOff, { capture: true, passive: false });
+      window.addEventListener('touchmove', state.holdOff, { capture: true, passive: false });
+      window.addEventListener('keydown', state.holdOffKey, true);
+      window.addEventListener('mousedown', state.holdOffMiddle, true);
+      this.state = state;
+      state.watchdogMs = watchdogMs;
+      this.armWatchdog(state);
+      this.settleLayout(-1, { floating: false });
+
+      const liveScrollHeight = isWindow
+        ? Math.max(
+            scrollHeight,
+            target ? target.scrollHeight : 0,
+            html ? html.scrollHeight : 0,
+            document.body ? document.body.scrollHeight : 0
+          )
+        : Math.max(scrollHeight, target ? target.scrollHeight : 0);
+
+      const rawTotalHeight = isWindow ? liveScrollHeight : (paneTop + liveScrollHeight + bottomTail);
+      // The pictures overlap a little: a screen scaled to 125 % turns 429 CSS px into 536.25 screen pixels, and rounding every slice to whole pixels
+      // would leave a blank hairline between some of them (SHOT11). Later pictures simply print over the overlap.
+      const truncated = rawTotalHeight > capCssHeight;
+      const totalHeight = truncated ? capCssHeight : rawTotalHeight;
+
+      const maxScrollable = Math.max(0, liveScrollHeight - paneHeight);
+      const neededScroll = Math.min(maxScrollable, Math.max(0, totalHeight - paneTop - bottomTail - paneHeight));
+      const slices = [0];
+      if (neededScroll > 2) {
+        for (let y = step; y < neededScroll; y += step) slices.push(y);
+        slices.push(neededScroll);
+      }
+      state.slicesCount = slices.length;
+      state.truncated = truncated;
+      state.initialScrollHeight = liveScrollHeight;
+
+      return {
+        ok: true,
+        viewportWidth,
+        viewportHeight,
+        dpr,
+        paneTop,
+        paneLeft,
+        paneHeight,
+        paneWidth,
+        paneBottom,
+        leftGutterBg,
+        rightGutterBg,
+        fullWidthFooter,
+        isPane: !isWindow,
+        bottomTail, // what lies under a pane that scrolls by itself (a bar), in CSS px: the service worker takes it from the first picture
+        cardTop, // where the card on the page begins (CSS px from the top of the window) when it stays through the pictures in the middle, else null
+        totalHeight,
+        slices,
+        truncated
+      };
+    },
+
+    /** Where the band that the card covers begins, in CSS px from the top of the window, when the pictures in the middle can do without it; null when they cannot. */
+    cardBandTop(paneTop, paneHeight, viewportHeight) {
+      const top = viewportHeight - HUD_BAND;
+      const usable = Math.min(paneTop + paneHeight, top) - paneTop; // the rows a picture in the middle gives: down to where the card begins, or to the end of the pane
+      return usable >= 200 && usable >= paneHeight * HUD_MIN_USABLE ? top : null;
+    },
+
+    // Sticky elements are part of the page (the heading of a section, the head of a table, an action bar at the end), but where they stick depends on how
+    // far the page is scrolled: every picture would show them somewhere else, one on a seam would be cut in two, and one that sticks to the bottom would
+    // hover over the first screen instead of closing the page. For the time of the capture they become ordinary positioned elements without offsets: they
+    // lie where the page's flow puts them, in every picture, as in the browser's own full-page rendering. Returns whether this one was changed.
+    unstick(el, state) {
+      if (state.unstuck.has(el)) return false;
+      // Outside a pane that scrolls by itself a sticky element does not move with the pane: it is part of the screen around it.
+      if (!state.isWindow && state.target && !this.containsDeep(state.target, el)) return false;
+      state.unstuck.add(el);
+      state.unstuckEls.push({
+        el,
+        hadStyleAttribute: el.hasAttribute('style'),
+        saved: ['position', 'top', 'right', 'bottom', 'left'].map((name) => ({ name, value: el.style.getPropertyValue(name), priority: el.style.getPropertyPriority(name) }))
+      });
+      el.style.setProperty('position', 'relative', 'important');
+      for (const side of ['top', 'right', 'bottom', 'left']) el.style.setProperty(side, 'auto', 'important');
+      return true;
+    },
+
+    hasHiddenAncestor(el, hiddenSet) {
+      if (!hiddenSet || hiddenSet.size === 0) return false;
+      for (let cur = this.parentOrHost(el); cur; cur = this.parentOrHost(cur)) {
+        if (hiddenSet.has(cur)) return true;
+      }
+      return false;
+    },
+
+    isCompositeBar(el) {
+      if (!(el instanceof HTMLElement)) return false;
+      if (el.childElementCount > 1) return true;
+      try {
+        if (el.querySelector('textarea, input, [contenteditable], [role="textbox"], rich-textarea')) return true;
+        const st = getComputedStyle(el);
+        const bg = st.backgroundColor;
+        if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') return true;
+        if (st.backdropFilter && st.backdropFilter !== 'none') return true;
+        if (st.boxShadow && st.boxShadow !== 'none') return true;
+        if (parseFloat(st.borderTopWidth) > 0 && st.borderTopStyle !== 'none') return true;
+      } catch {}
+      return false;
+    },
+
+    /** The area that is photographed, in CSS px of the window: the window itself, or the pane that scrolls by itself. */
+    aperture(state) {
+      if (state.isWindow) return { left: 0, top: 0, right: state.viewportWidth, bottom: state.viewportHeight };
+      const left = state.paneLeft || 0;
+      const top = state.paneTop || 0;
+      return { left, top, right: left + (state.paneWidth || state.viewportWidth), bottom: top + (state.paneHeight || state.viewportHeight) };
+    },
+
+    /** The points of the area at which the browser is asked what lies there: columns across it, rows from top to bottom, denser near the bottom (where inputs live). */
+    gridPoints(aperture) {
+      const activeW = aperture.right - aperture.left;
+      const activeH = aperture.bottom - aperture.top;
+      const xs = [
+        aperture.left + 24,
+        aperture.left + 64,
+        aperture.left + Math.round(activeW * 0.2),
+        aperture.left + Math.round(activeW * 0.35),
+        aperture.left + Math.round(activeW * 0.5),
+        aperture.left + Math.round(activeW * 0.65),
+        aperture.left + Math.round(activeW * 0.8),
+        aperture.right - 64,
+        aperture.right - 24
+      ].filter((x) => x > aperture.left + 4 && x < aperture.right - 4);
+      const ys = [
+        aperture.top + 16, aperture.top + 36, aperture.top + 60, aperture.top + 88, aperture.top + 120,
+        aperture.top + Math.round(activeH * 0.35), aperture.top + Math.round(activeH * 0.5), aperture.top + Math.round(activeH * 0.65),
+        aperture.bottom - 16, aperture.bottom - 36, aperture.bottom - 56, aperture.bottom - 76, aperture.bottom - 96,
+        aperture.bottom - 116, aperture.bottom - 136, aperture.bottom - 160, aperture.bottom - 188, aperture.bottom - 220
+      ].filter((y) => y > aperture.top + 4 && y < aperture.bottom - 4);
+      const points = [];
+      for (const x of xs) for (const y of ys) points.push([x, y]);
+      return points;
+    },
+
+    // What stays where it is on the screen while the page scrolls under it, whatever the way it is done: a script that puts an element back after every
+    // scroll (the style sheet says it scrolls with the page), something that is made not to take clicks. The page is scrolled a little, given time to answer,
+    // and what is on the screen at a grid of points is looked at before and after: what has not moved is stationary. Done once, before the first picture.
+    async probeStationary(state) {
+      const scroller = state.isWindow ? null : state.target;
+      if (!state.isWindow && !scroller) return;
+      const current = () => (state.isWindow ? (window.scrollY || 0) : (scroller.scrollTop || 0));
+      const setTop = (y) => { try { if (state.isWindow) window.scrollTo({ left: state.initialWinX, top: y, behavior: 'instant' }); else scroller.scrollTop = y; } catch {} };
+      const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      const settle = async () => { await frames(); await new Promise((resolve) => setTimeout(resolve, 120)); await frames(); };
+
+      const aperture = this.aperture(state);
+      const activeW = aperture.right - aperture.left;
+      const activeH = aperture.bottom - aperture.top;
+      const maxArea = activeW * activeH * 0.65;
+      const before = new Map();
+      for (const [x, y] of this.gridPoints(aperture)) {
+        for (const hit of this.deepElementsFromPoint(x, y)) {
+          if (!(hit instanceof HTMLElement) || hit === CaptureHud.host) continue;
+          if (hit === document.body || hit === document.documentElement) break;
+          if (state.target && !state.isWindow && (hit === state.target || this.containsDeep(hit, state.target))) break;
+          // the element and the containers around it that are still small (the wrapper of a pill is what has to be hidden, not only the pill)
+          for (let cur = hit; cur instanceof HTMLElement && cur !== document.body && cur !== document.documentElement; cur = this.parentOrHost(cur)) {
+            if (!state.isWindow && state.target && (cur === state.target || this.containsDeep(cur, state.target))) break;
+            if (before.has(cur)) continue;
+            const r = cur.getBoundingClientRect();
+            if (r.height > activeH * 0.45 || r.width * r.height > maxArea) break;
+            before.set(cur, r.top);
+          }
+        }
+      }
+      if (before.size === 0) return;
+
+      const saved = current();
+      const maxTop = state.isWindow
+        ? Math.max(0, Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0) - window.innerHeight)
+        : Math.max(0, (scroller.scrollHeight || 0) - (scroller.clientHeight || 0));
+      const to = saved + 120 <= maxTop ? saved + 120 : Math.max(0, saved - 120);
+      if (Math.abs(to - saved) < 40) return;
+      setTop(to);
+      await settle();
+      const moved = Math.abs(current() - saved);
+      if (moved >= 40 && this.state === state && !state.cancelled) {
+        for (const [el, top0] of before) {
+          if (Math.abs(el.getBoundingClientRect().top - top0) < 1.5) state.stationary.add(el);
+        }
+      }
+      setTop(saved);
+      await settle();
+    },
+
+    // In an inner-scrolling app: what is painted in front of the pane, inside its area, and does not move when the pane scrolls (outside the pane, like a
+    // prompt pill or a button that is pulled up over it, or inside it in a container that does not scroll). It is found by asking the browser what lies at
+    // a grid of points over the pane, and by scrolling the pane a little and seeing which of those things stay where they were.
+    collectFrontOverlays(state, aperture) {
+      const frontOverlays = new Set();
+      if (state.isWindow || !state.target) return frontOverlays;
+      const activeW = aperture.right - aperture.left;
+      const activeH = aperture.bottom - aperture.top;
+      const maxArea = activeW * activeH * 0.65;
+      const pLeft = aperture.left;
+      const pRight = aperture.right;
+      const stacks = [];
+      const beforeTop = new Map();
+      for (const [x, y] of this.gridPoints(aperture)) {
+        const stack = this.deepElementsFromPoint(x, y);
+        stacks.push(stack);
+        for (const el of stack) {
+          if (!(el instanceof HTMLElement) || el === CaptureHud.host) continue;
+          if (el === state.target || this.containsDeep(el, state.target)) break;
+          if (this.containsDeep(state.target, el)) {
+            for (let cur = el; cur instanceof HTMLElement && cur !== state.target; cur = this.parentOrHost(cur)) {
+              if (beforeTop.has(cur)) break;
+              const r = cur.getBoundingClientRect();
+              if (r.height > activeH * 0.45 || r.width * r.height > maxArea) break;
+              beforeTop.set(cur, r.top);
+            }
+          }
+        }
+      }
+
+      const stationaryInTarget = new Set(state.stationary);
+      if (beforeTop.size > 0) {
+        const savedTop = state.target.scrollTop || 0;
+        const maxScr = Math.max(0, (state.target.scrollHeight || 0) - (state.target.clientHeight || 0));
+        const probeTop = savedTop + 24 <= maxScr ? savedTop + 24 : Math.max(0, savedTop - 24);
+        if (Math.abs(probeTop - savedTop) >= 4) {
+          try { state.target.scrollTop = probeTop; } catch {}
+          const delta = (state.target.scrollTop || 0) - savedTop;
+          if (Math.abs(delta) >= 4) {
+            for (const [node, top0] of beforeTop) {
+              if (Math.abs(node.getBoundingClientRect().top - top0) < 1.5) stationaryInTarget.add(node);
+            }
+          }
+          try { state.target.scrollTop = savedTop; } catch {}
+        }
+      }
+
+      for (const stack of stacks) {
+        for (const hit of stack) {
+          if (!(hit instanceof HTMLElement) || hit === CaptureHud.host) continue;
+          if (hit === state.target || this.containsDeep(hit, state.target)) break;
+          const inTarget = this.containsDeep(state.target, hit);
+          if (inTarget && !stationaryInTarget.has(hit)) break;
+          const hitRect = hit.getBoundingClientRect();
+          const hitIsTiny = hitRect.width < 96 && hitRect.height < 96;
+          let best = hit;
+          for (let cur = this.parentOrHost(hit); cur instanceof HTMLElement && cur !== document.body && cur !== document.documentElement; cur = this.parentOrHost(cur)) {
+            if (cur === state.target || this.containsDeep(cur, state.target)) break;
+            if (this.containsDeep(state.target, cur) && !stationaryInTarget.has(cur)) break;
+            const r = cur.getBoundingClientRect();
+            if (r.width * r.height > maxArea || r.height > activeH * 0.45) break;
+            if (r.left < pLeft - 24 || r.right > pRight + 24) break;
+            if (hitIsTiny && r.width >= Math.min(220, activeW * 0.25) && !this.isCompositeBar(cur)) break;
+            best = cur;
+          }
+          frontOverlays.add(best);
+        }
+      }
+      return frontOverlays;
+    },
+
+    /** Whether the element floats: it stays where it is while the page scrolls under it. */
+    isFloating(el, style, state, frontOverlays) {
+      if (frontOverlays.has(el) || state.stationary.has(el) || style.position === 'fixed') return true;
+      if (state.isWindow || !state.target || style.position === 'static') return false;
+      if (style.position === 'absolute') {
+        // an absolute element that is outside the pane, or whose positioned ancestor is, does not scroll with it
+        const op = el.offsetParent;
+        return !this.containsDeep(state.target, el) || !op || (op !== state.target && !this.containsDeep(state.target, op));
+      }
+      // any other positioned element outside the pane (a wrapper that is pulled up over it with a negative margin): in front of it, unless it lies behind
+      return !this.containsDeep(state.target, el) && !(parseInt(style.zIndex, 10) < 0);
+    },
+
+    /**
+     * Hides an element for the pictures to come. A dock is remembered: it comes back for the last picture.
+     * "visibility: hidden" alone is not enough: a part of the element that says "visibility: visible" itself stays on the screen inside a hidden parent, and the
+     * real input area of a chat app says exactly that (its input area, its disclaimer, its microphone button), so the pill was in every picture. The opacity of
+     * a parent covers whatever is in it, whatever the parts say.
+     */
+    hide(el, isDock) {
+      const state = this.state;
+      const entry = {
+        el,
+        hadStyleAttribute: el.hasAttribute('style'),
+        value: el.style.getPropertyValue('visibility'),
+        priority: el.style.getPropertyPriority('visibility'),
+        opacity: el.style.getPropertyValue('opacity'),
+        opacityPriority: el.style.getPropertyPriority('opacity'),
+        transition: el.style.getPropertyValue('transition'),
+        transitionPriority: el.style.getPropertyPriority('transition')
+      };
+      state.hidden.add(el);
+      state.hiddenEls.push(entry);
+      if (isDock) state.bottomDocks.push(entry);
+      // no transition: one that animates visibility or opacity would keep the element on screen for its duration
+      el.style.setProperty('transition', 'none', 'important');
+      el.style.setProperty('visibility', 'hidden', 'important');
+      el.style.setProperty('opacity', '0', 'important');
+    },
+
+    /** Gives a hidden element the visibility and opacity it had of its own (an inline value, or none). */
+    reveal(item) {
+      if (item.value) item.el.style.setProperty('visibility', item.value, item.priority);
+      else item.el.style.removeProperty('visibility');
+      if (item.opacity) item.el.style.setProperty('opacity', item.opacity, item.opacityPriority);
+      else item.el.style.removeProperty('opacity');
+    },
+
+    // One walk over the page before every picture: the sticky elements are held in place (above), and what floats over the page is judged by
+    // SelectraShared.classifyFloating and dealt with. What is anchored to the top (a header, the buttons in it) or to a side stays in the first picture and
+    // goes from the second on; a wide bar at the bottom (cookie bar, composer) stays out until the last picture, which has it once at the very end; any
+    // other floating thing (a "scroll to bottom" button, a chat bubble) hovers over the text and is hidden from the first picture on. A page that fits in
+    // one picture is left as it is. With { floating: false } only the sticky elements are dealt with. Returns how many elements were changed.
+    settleLayout(index, { floating = true } = {}) {
+      const state = this.state;
+      if (!state || !document.body) return 0;
+      let changed = 0;
+      const judging = floating && !(index === 0 && (state.slicesCount || 1) <= 1);
+      const positioned = []; // fixed elements, and in an inner-scrolling app every positioned one: they are judged below
+      this.forEachLayoutElement((el) => {
+        if (el === CaptureHud.host || state.hidden.has(el)) return;
+        // Never touch the scroll target or any ancestor wrapping it (e.g. an SPA fixed root container).
+        if (state.target && (el === state.target || this.containsDeep(el, state.target))) return;
+        const style = getComputedStyle(el);
+        const pos = style.position;
+        if (pos === 'static') return;
+        if (pos === 'sticky' && this.unstick(el, state)) { changed++; return; }
+        if (judging && (pos === 'fixed' || !state.isWindow)) positioned.push(el);
+      });
+      if (!judging) return changed;
+
+      const aperture = this.aperture(state);
+      const frontOverlays = this.collectFrontOverlays(state, aperture);
+      // What floats, and what kind of thing it is. The outermost one decides for what is in it: the badges in a fixed menu follow the menu, the buttons in
+      // a top bar follow the bar; only what lies in something that is left alone (a veil that covers everything) is judged by itself.
+      const kinds = new Map();
+      const consider = (el) => {
+        if (kinds.has(el) || state.hidden.has(el)) return;
+        if (state.target && (el === state.target || this.containsDeep(el, state.target))) return;
+        const style = getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return;
+        if (!this.isFloating(el, style, state, frontOverlays)) return;
+        kinds.set(el, classifyFloating(el.getBoundingClientRect(), aperture));
+      };
+      for (const el of positioned) consider(el);
+      for (const el of frontOverlays) consider(el);
+      for (const el of state.stationary) consider(el);
+
+      const depths = new Map();
+      for (const el of kinds.keys()) {
+        let depth = 0;
+        for (let cur = this.parentOrHost(el); cur; cur = this.parentOrHost(cur)) depth++;
+        depths.set(el, depth);
+      }
+      const ordered = [...kinds.keys()].sort((x, y) => depths.get(x) - depths.get(y));
+      for (const el of ordered) {
+        const kind = kinds.get(el);
+        if (kind === 'skip') continue;
+        let covered = false;
+        for (let cur = this.parentOrHost(el); cur; cur = this.parentOrHost(cur)) {
+          const outer = kinds.get(cur);
+          if (outer && outer !== 'skip') { covered = true; break; }
+        }
+        if (covered || this.hasHiddenAncestor(el, state.hidden)) continue;
+        if ((kind === 'header' || kind === 'side') && index === 0) continue;
+        this.hide(el, kind === 'dock');
+        changed++;
+      }
+      return changed;
+    },
+
+    /** (Re)starts the countdown that puts the page back when the service worker does not come back. */
+    armWatchdog(state) {
+      clearTimeout(state.watchdog);
+      state.watchdog = setTimeout(() => { if (this.state === state) this.cleanup(); }, state.watchdogMs);
+    },
+
+    /** Where the page (or the pane) is scrolled to right now, in CSS px. */
+    scrollPosition(state) {
+      return state.isWindow ? (window.scrollY || (state.target ? state.target.scrollTop : 0) || 0) : (state.target ? state.target.scrollTop || 0 : 0);
+    },
+
+    async step(index, y, isLast = false) {
+      const state = this.state;
+      if (!state) return { ok: false, error: 'NOT_PREPARED' };
+      if (state.cancelled) return { ok: false, cancelled: true };
+      this.armWatchdog(state);
+
+      const targetY = Math.max(0, Number(y) || 0);
+      try {
+        if (state.isWindow) {
+          window.scrollTo({ left: state.initialWinX, top: targetY, behavior: 'instant' });
+        } else if (state.target) {
+          state.target.scrollTop = targetY;
+        }
+      } catch {
+        if (state.isWindow) window.scrollTo(state.initialWinX, targetY);
+      }
+
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      if (!this.state || this.state !== state || state.cancelled) return { ok: false, cancelled: true };
+
+      if (index === 0 && !state.probed) {
+        state.probed = true;
+        await this.probeStationary(state);
+        if (!this.state || this.state !== state || state.cancelled) return { ok: false, cancelled: true };
+      }
+
+      // what the scrolling has brought into the page (a list that renders as it comes into view) is dealt with like the rest
+      let changed = this.settleLayout(index);
+
+      const actualScrollTop = state.isWindow
+        ? (window.scrollY || (state.target ? state.target.scrollTop : 0) || 0)
+        : (state.target ? state.target.scrollTop || 0 : 0);
+
+      const html = document.documentElement;
+      const body = document.body;
+      const currentScrollHeight = state.isWindow
+        ? Math.max(
+            state.target ? state.target.scrollHeight : 0,
+            html ? html.scrollHeight : 0,
+            body ? body.scrollHeight : 0,
+            state.viewportHeight
+          )
+        : (state.target ? state.target.scrollHeight : state.paneHeight);
+      const maxScrollable = Math.max(0, currentScrollHeight - state.paneHeight);
+      const maxAllowedScroll = Math.max(0, state.capCssHeight - state.paneTop - state.bottomTail - state.paneHeight);
+      const effectiveMaxScroll = Math.min(maxScrollable, maxAllowedScroll);
+      let needsMore = isLast && effectiveMaxScroll > actualScrollTop + 4 && (index + 1) < MAX_CAPTURE_SLICES;
+      // the page is longer than planned: follow it for a few rounds, not for ever
+      let growing = false;
+      if (needsMore) {
+        if (state.growthRounds >= MAX_GROWTH_ROUNDS || currentScrollHeight - state.initialScrollHeight > state.initialScrollHeight) { needsMore = false; growing = true; }
+        else state.growthRounds++;
+      }
+      const isTrulyLast = isLast && !needsMore;
+      // the last picture, and the page goes on below it (a feed that grows as it is scrolled, a page longer than the limits): the picture is cut
+      const cut = isTrulyLast && !growing && maxScrollable > actualScrollTop + 4;
+
+      // On the final slice, at the real end of the page, the docks (a composer, a cookie bar) come back so that they close the page; a picture that is cut does not end there.
+      if (isTrulyLast && !state.truncated && !cut && !growing && state.bottomDocks.length > 0) {
+        for (const item of state.bottomDocks) {
+          try {
+            this.reveal(item);
+            changed++;
+          } catch {}
+        }
+      }
+
+      if (changed > 0 || index >= 1) {
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))); // the change is painted before the picture is taken
+        if (!this.state || this.state !== state || state.cancelled) return { ok: false, cancelled: true };
+      }
+
+      const nextSliceY = needsMore ? Math.min(effectiveMaxScroll, actualScrollTop + state.step) : null;
+      const newTotalHeight = needsMore
+        ? Math.min(state.capCssHeight, state.isWindow ? currentScrollHeight : (state.paneTop + currentScrollHeight + state.bottomTail))
+        : null;
+      if (needsMore) state.slicesCount = index + 2;
+
+      return { ok: true, actualScrollTop, nextSliceY, newTotalHeight, cut, growing };
+    },
+
+    cleanup(toastKey = '', parts = 0, saving = false) {
+      const state = this.state;
+      this.state = null;
+
+      if (state) {
+        clearTimeout(state.watchdog);
+        if (state.onKeyDown) window.removeEventListener('keydown', state.onKeyDown, true);
+        if (state.holdOff) { window.removeEventListener('wheel', state.holdOff, true); window.removeEventListener('touchmove', state.holdOff, true); }
+        if (state.holdOffKey) window.removeEventListener('keydown', state.holdOffKey, true);
+        if (state.holdOffMiddle) window.removeEventListener('mousedown', state.holdOffMiddle, true);
+        for (const item of state.hiddenEls) {
+          try {
+            this.reveal(item);
+            if (item.transition) item.el.style.setProperty('transition', item.transition, item.transitionPriority);
+            else item.el.style.removeProperty('transition');
+            if (!item.hadStyleAttribute && !item.el.getAttribute('style')) item.el.removeAttribute('style'); // no empty style="" left behind
+          } catch {}
+        }
+        for (const item of state.unstuckEls) {
+          for (const { name, value, priority } of item.saved) {
+            try {
+              if (value) item.el.style.setProperty(name, value, priority);
+              else item.el.style.removeProperty(name);
+            } catch {}
+          }
+          try { if (!item.hadStyleAttribute && !item.el.getAttribute('style')) item.el.removeAttribute('style'); } catch {} // (likewise)
+        }
+        try {
+          if (state.isWindow) {
+            window.scrollTo({ left: state.initialWinX, top: state.initialWinY, behavior: 'instant' });
+          } else if (state.target) {
+            state.target.scrollLeft = state.initialTargetLeft;
+            state.target.scrollTop = state.initialTargetTop;
+            window.scrollTo({ left: state.initialWinX, top: state.initialWinY, behavior: 'instant' });
+          }
+        } catch {
+          try { window.scrollTo(state.initialWinX, state.initialWinY); } catch {}
+        }
+      }
+      // (only now: with the page's own snapping and smooth scrolling still switched off the scroll position goes back exactly where it was)
+      DOMUtils.removeStyle(SCREENSHOT_STYLE_ID);
+      if (saving && state) CaptureHud.saving();
+      else CaptureHud.remove();
+
+      if (toastKey) {
+        const msg = T(toastKey, { n: parts });
+        if (msg) DOMUtils.showToast(msg);
+      }
+      return { ok: true };
+    }
+  };
+
   // ─── Immediate Storage Read & Application ───
   // Hostname of the site this frame is embedded in. Same-origin parents can be read directly; for a
   // cross-origin parent the service worker knows it from the tab URL.
@@ -2461,11 +3410,6 @@
       return true;
     }
 
-    if (message?.action === 'getStatus') {
-      sendResponse(featureManager.status());
-      return true;
-    }
-
     // a frame of this tab asks which site the tab is on (only the top frame answers; the tab's own address can be another page's while one is prerendered)
     if (message?.action === 'getHostname') {
       if (window.top !== window) return undefined;
@@ -2499,6 +3443,46 @@
     if (message?.action === 'blobRelease') {
       BlobTransfer.release(String(message.url || ''));
       sendResponse({ ok: true });
+      return false;
+    }
+
+    if (message?.action === 'screenshotPrepare') {
+      if (window.top !== window) return undefined;
+      let plan;
+      const watchdogMs = Number(message.watchdogMs) >= 500 && Number(message.watchdogMs) <= 120000 ? Number(message.watchdogMs) : undefined; // (only the extension's own script can send this)
+      try { plan = ScreenshotCoordinator.prepare(watchdogMs); } catch { ScreenshotCoordinator.cleanup(); plan = { ok: false }; } // nothing of this script's may be left on a page
+      if (plan && plan.ok === true) CaptureHud.show(1, Array.isArray(plan.slices) ? plan.slices.length : 1, { held: plan.cardTop !== null && plan.cardTop !== undefined });
+      sendResponse(plan);
+      return false;
+    }
+    if (message?.action === 'screenshotStep') {
+      if (window.top !== window) return undefined;
+      ScreenshotCoordinator.step(message.index, message.y, message.isLast === true).then(sendResponse, () => sendResponse({ ok: false }));
+      return true;
+    }
+    if (message?.action === 'screenshotHud') { // the service worker tells the card what is going on (the top frame owns it)
+      if (window.top !== window) return undefined;
+      if (message.op === 'hold') { CaptureHud.hold().then(() => sendResponse({ ok: true })); return true; }
+      if (message.op === 'release') CaptureHud.release();
+      else if (message.op === 'progress') CaptureHud.update(Number(message.current) || 1, Number(message.total) || 1);
+      sendResponse({ ok: true });
+      return false;
+    }
+    if (message?.action === 'screenshotVerify') { // where is the page now? (the service worker checks it after every picture)
+      if (window.top !== window) return undefined;
+      const state = ScreenshotCoordinator.state;
+      sendResponse({ ok: !!state, top: state ? ScreenshotCoordinator.scrollPosition(state) : 0, w: window.innerWidth, h: window.innerHeight, dpr: Math.max(1, Number(window.devicePixelRatio) || 1) /* (as in prepare: a zoom below 100 % is no change) */ });
+      return false;
+    }
+    if (message?.action === 'screenshotCancel') {
+      if (window.top !== window) return undefined;
+      if (ScreenshotCoordinator.state) ScreenshotCoordinator.state.cancelled = true; // the step that is under way ends at once
+      sendResponse({ ok: true });
+      return false;
+    }
+    if (message?.action === 'screenshotCleanup') {
+      if (window.top !== window) return undefined;
+      sendResponse(ScreenshotCoordinator.cleanup(String(message.toastKey || ''), Number(message.parts) || 0, message.saving === true));
       return false;
     }
 

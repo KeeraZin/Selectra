@@ -3,7 +3,7 @@
 // One definition of the settings model for the popup, the service worker and the content script (shared.js).
 const {
   FEATURE_KEYS, UNLOCK_KEYS, GLOBAL_SETTINGS_KEY, GLOBAL_MODE_KEY,
-  emptySettings, normalizeSettings, countEnabled, siteKey, resolveSettings
+  emptySettings, normalizeSettings, countEnabled, siteKey, resolveSettings, isExcludedSensitiveUrl
 } = window.SelectraShared;
 
 // Safe storage wrapper (works in Extension & Standalone Preview). `area` is 'local', or 'session' (memory only) for the sites of a private window.
@@ -236,6 +236,7 @@ function render(state, toggleMap, isGlobal, hostname) {
   const domainBadge = document.getElementById('domainBadge');
   if (domainBadge) {
     domainBadge.textContent = isGlobal ? i18n.t('badgeGlobalTab') : hostname;
+    domainBadge.title = isGlobal ? '' : hostname; // a long host is cut with an ellipsis: its full name is one hover away
   }
 
   // Mode buttons active class
@@ -254,13 +255,11 @@ function render(state, toggleMap, isGlobal, hostname) {
 
   const countEl = document.getElementById('activeCount');
   const textEl = document.getElementById('statusText');
-  const dotEl = document.querySelector('.status-dot');
 
   if (countEl) {
     countEl.textContent = i18n.t('statusActiveCount', { n: total });
     countEl.classList.toggle('has-active', total > 0);
   }
-  dotEl?.classList.toggle('active', total > 0);
 
   if (textEl) {
     if (total === 0) {
@@ -309,7 +308,9 @@ function renderDiagnosis(diagnosis) {
   );
 
   if (hasAnyBarrier) {
-    const total = diagnosis.totalBarriers || (
+    // The number is what is listed below it. The page's own count (totalBarriers) was made when it was scanned, before the popup added what the page showed
+    // later (a blocked copy, a "copying is disabled" message): it can be smaller than the list, so it is made again from the list, and the report uses it too.
+    const total = (
       (diagnosis.hasRightClickLock ? 1 : 0) +
       (diagnosis.hasSelectionLock ? 1 : 0) +
       (diagnosis.hasCopyLock ? 1 : 0) +
@@ -317,6 +318,7 @@ function renderDiagnosis(diagnosis) {
       (diagnosis.hasBlurFilter ? 1 : 0) +
       (diagnosis.hasAlertTrap ? 1 : 0)
     );
+    diagnosis.totalBarriers = total;
 
     card.classList.add('has-barriers');
     // "found and bypassed" is true only if every barrier found has its unlocker switched on
@@ -504,13 +506,38 @@ function initLanguagePicker(onLanguageChanged) {
   renderLanguageOptions();
 }
 
+/**
+ * Puts a text on the clipboard: with the clipboard API, and where that refuses (a popup that has lost the focus does not get it) the old way, with a text field
+ * that is selected and copied. True when it was copied; the caller says so only then.
+ */
+async function copyTextToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {}
+  let field = null;
+  try {
+    field = document.createElement('textarea');
+    field.value = text;
+    field.setAttribute('readonly', '');
+    field.style.cssText = 'position: fixed; left: -9999px; top: 0; opacity: 0;';
+    document.body.appendChild(field);
+    field.focus();
+    field.select();
+    return document.execCommand('copy') === true;
+  } catch {
+    return false;
+  } finally {
+    field?.remove();
+  }
+}
+
 function initContactModal() {
   const contactModal = document.getElementById('contactModal');
   const contactBtn = document.getElementById('contactBtn');
   const contactHeaderBtn = document.getElementById('contactHeaderBtn');
   const contactModalClose = document.getElementById('contactModalClose');
   const contactSiteDomain = document.getElementById('contactSiteDomain');
-  const contactTelemetryDot = document.getElementById('contactTelemetryDot');
   const contactTelemetryPill = document.getElementById('contactTelemetryPill');
   const contactBarrierCountText = document.getElementById('contactBarrierCountText');
   const telemetryAccordion = document.getElementById('telemetryAccordion');
@@ -577,9 +604,6 @@ function initContactModal() {
       )
     );
 
-    if (contactTelemetryDot) {
-      contactTelemetryDot.classList.toggle('warning', hasBarriers);
-    }
     if (contactTelemetryPill) {
       contactTelemetryPill.classList.toggle('warning', hasBarriers);
     }
@@ -656,10 +680,9 @@ function initContactModal() {
   let copiedTimeout = null;
   copyDiagnosticsBtn?.addEventListener('click', async () => {
     const text = getDiagnosticReport();
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // Fallback
+    if (!(await copyTextToClipboard(text))) {
+      showToast(i18n ? i18n.t('toastCopyFailed') : 'Could not copy the diagnostic report'); // it did not go to the clipboard: the button does not say it did
+      return;
     }
 
     copyDiagnosticsBtn.classList.add('copied');
@@ -694,17 +717,17 @@ function initContactModal() {
     if (sendReportBtn.disabled) return;
     const text = getDiagnosticReport();
     const id = typeof chrome !== 'undefined' && chrome.runtime ? chrome.runtime.id : '';
-    let copied = false;
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-    } catch {}
+    const copied = await copyTextToClipboard(text);
 
     const label = sendReportBtn.querySelector('.btn-label');
     const originalLabel = label ? label.textContent : '';
     if (copied) {
       if (label && i18n) label.textContent = i18n.t('contactCopiedFeedback');
       sendReportBtn.classList.add('copied');
+      sendReportBtn.disabled = true;
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+    } else {
+      showToast(i18n ? i18n.t('toastCopyFailed') : 'Could not copy the diagnostic report'); // the page still opens, but the person knows there is nothing to paste
       sendReportBtn.disabled = true;
       await new Promise((resolve) => setTimeout(resolve, 1100));
     }
@@ -865,6 +888,9 @@ async function runPopup() {
   activeIsGlobal = isGlobal;
   const siteStored = !isGlobal && storageKey ? await storage.get([storageKey], siteArea) : {};
   let state = resolveSettings(isGlobal ? flags : siteStored, hostname, isGlobal);
+  // The scope `state` belongs to. It changes together with `state` and never before it: while a switch between "This site" and "Global" is still
+  // loading, `isGlobal` (the mode) is already the new one but what is on screen, and what a click changes, is still the old scope's settings.
+  let stateIsGlobal = isGlobal;
   activeState = state;
 
   const toggleMap = Object.fromEntries(
@@ -881,10 +907,12 @@ async function runPopup() {
   function commit(nextState, options = {}) {
     state = normalizeSettings(nextState);
     activeState = state;
-    render(state, toggleMap, isGlobal, hostname);
+    activeIsGlobal = stateIsGlobal;
+    render(state, toggleMap, stateIsGlobal, hostname);
 
-    // Taken NOW, not when the write runs: the mode can be switched while a write waits in the queue, and it has to go where the click was made.
-    const target = { global: isGlobal, key: isGlobal ? globalKey : storageKey, snapshot: deepClone(state), reset: options.removeStorage === true };
+    // Taken NOW, not when the write runs: the mode can be switched while a write waits in the queue, and it has to go where the click was made. That is the scope
+    // of the settings on screen (stateIsGlobal), which is not the mode while a switch is still loading: the click would otherwise write one scope's settings into the other's.
+    const target = { global: stateIsGlobal, key: stateIsGlobal ? globalKey : storageKey, snapshot: deepClone(state), reset: options.removeStorage === true };
 
     pendingWrites++;
     persistQueue = persistQueue.then(async () => {
@@ -942,17 +970,18 @@ async function runPopup() {
   // Mode switcher. It goes through the same queue as the writes, so a write made before the switch still goes where it was made.
   function switchMode(toGlobal) {
     if (isGlobal === toGlobal) return persistQueue;
-    isGlobal = toGlobal;
-    activeIsGlobal = toGlobal;
+    isGlobal = toGlobal; // (the mode; the settings on screen are the old scope's until the task below has loaded the new one)
     pendingWrites++;
     persistQueue = persistQueue.then(async () => {
       await storage.set({ [GLOBAL_MODE_KEY]: toGlobal });
       if (isGlobal !== toGlobal) return; // switched again meanwhile
       const fresh = toGlobal ? await storage.get([globalKey]) : (storageKey ? await storage.get([storageKey], siteArea) : {});
       state = resolveSettings(fresh, hostname, toGlobal);
+      stateIsGlobal = toGlobal;
       activeState = state;
+      activeIsGlobal = toGlobal;
       // Only the MODE changed. The pages follow the flag by themselves; saving the settings shown here would pin a copy of them to this site.
-      render(state, toggleMap, isGlobal, hostname);
+      render(state, toggleMap, stateIsGlobal, hostname);
     }).catch(() => {}).finally(() => {
       pendingWrites--;
       lastWriteAt = Date.now();
@@ -991,6 +1020,106 @@ async function runPopup() {
     });
   }
 
+  // Page Screenshot action buttons (Visible area & Full page)
+  const btnCaptureVisible = document.getElementById('btnCaptureVisible');
+  const btnCaptureFull = document.getElementById('btnCaptureFull');
+  const isSensitiveTab = isExcludedSensitiveUrl(tab.url);
+  if (isSensitiveTab) {
+    for (const btn of [btnCaptureVisible, btnCaptureFull]) {
+      if (!btn) continue;
+      btn.disabled = true;
+      btn.setAttribute('data-i18n-title', 'toastScreenshotSensitive');
+      btn.title = i18n.t('toastScreenshotSensitive');
+    }
+  } else {
+    let activeShotBtn = null;
+    if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+      chrome.runtime.onMessage.addListener((msg, sender) => {
+        if (sender?.id !== chrome.runtime.id) return;
+        if (msg?.action === 'screenshotProgress' && msg.tabId === tab.id && activeShotBtn) {
+          activeShotBtn.textContent = `${msg.current}/${msg.total}…`;
+        }
+      });
+    }
+
+    const triggerScreenshot = async (mode, btn, otherBtn, labelKey) => {
+      if (!btn || btn.disabled || activeShotBtn) return;
+      activeShotBtn = btn;
+      btn.disabled = true;
+      if (otherBtn) otherBtn.disabled = true;
+      btn.classList.remove('is-saved');
+      btn.classList.add('is-busy');
+      btn.removeAttribute('data-i18n');
+      btn.textContent = mode === 'full' ? '1/1…' : '…';
+
+      // A full-page capture can take long (a very long page, one that never ends): the other button becomes the Stop button while it works.
+      const otherKey = otherBtn ? otherBtn.getAttribute('data-i18n') : '';
+      const otherTitleKey = otherBtn ? otherBtn.getAttribute('data-i18n-title') : '';
+      let stopListener = null;
+      if (mode === 'full' && otherBtn) {
+        otherBtn.removeAttribute('data-i18n');
+        otherBtn.removeAttribute('data-i18n-title');
+        otherBtn.textContent = i18n.t('btnCaptureStop');
+        otherBtn.title = i18n.t('btnCaptureStopTitle');
+        otherBtn.classList.add('is-stop');
+        otherBtn.disabled = false;
+        stopListener = () => {
+          otherBtn.disabled = true;
+          otherBtn.textContent = '…';
+          chrome.runtime.sendMessage({ action: 'cancelScreenshot', tabId: tab.id }).catch(() => {});
+        };
+        otherBtn.addEventListener('click', stopListener, { once: true });
+      }
+      const restoreOther = () => {
+        if (!otherBtn) return;
+        if (stopListener) {
+          otherBtn.removeEventListener('click', stopListener);
+          stopListener = null;
+          otherBtn.classList.remove('is-stop');
+          if (otherKey) otherBtn.setAttribute('data-i18n', otherKey);
+          if (otherTitleKey) otherBtn.setAttribute('data-i18n-title', otherTitleKey);
+          otherBtn.textContent = i18n.t(otherKey);
+          otherBtn.title = i18n.t(otherTitleKey);
+        }
+        otherBtn.disabled = false;
+      };
+
+      const restoreButtons = () => {
+        activeShotBtn = null;
+        btn.classList.remove('is-busy', 'is-saved');
+        btn.setAttribute('data-i18n', labelKey);
+        btn.textContent = i18n.t(labelKey);
+        btn.disabled = false;
+        restoreOther();
+      };
+
+      try {
+        const res = await chrome.runtime.sendMessage({ action: 'captureScreenshot', tabId: tab.id, mode });
+        restoreOther();
+        if (res?.success) {
+          btn.classList.remove('is-busy');
+          btn.classList.add('is-saved');
+          btn.textContent = i18n.t('btnCaptureSaved');
+          // what the person has to know comes first: they asked for the whole page and got only what was visible / the page was cut / it is a JPEG
+          showToast(i18n.t(res.fallbackVisible ? 'toastScreenshotVisibleOnly' : res.truncated ? 'toastScreenshotTruncated' : res.partial ? 'toastScreenshotPartial' : res.parts > 1 ? 'toastScreenshotParts' : res.format === 'jpeg' ? 'toastScreenshotJpeg' : 'toastScreenshotSaved', { n: res.parts }));
+          setTimeout(restoreButtons, 1400);
+        } else {
+          const err = res?.error || '';
+          restoreButtons();
+          if (err !== 'CANCELLED') {
+            showToast(i18n.t(err === 'SENSITIVE_PAGE' ? 'toastScreenshotSensitive' : err === 'ALREADY_CAPTURING' ? 'toastScreenshotBusy' : 'toastScreenshotFailed'));
+          }
+        }
+      } catch {
+        restoreButtons();
+        showToast(i18n.t('toastScreenshotFailed'));
+      }
+    };
+
+    btnCaptureVisible?.addEventListener('click', () => triggerScreenshot('visible', btnCaptureVisible, btnCaptureFull, 'btnCaptureVisible'));
+    btnCaptureFull?.addEventListener('click', () => triggerScreenshot('full', btnCaptureFull, btnCaptureVisible, 'btnCaptureFull'));
+  }
+
   // Quick action: Toggle all unlockers
   document.getElementById('quickAllBtn')?.addEventListener('click', async () => {
     const allActive = UNLOCK_KEYS.every(key => state.features[key]?.enabled);
@@ -1016,8 +1145,9 @@ async function runPopup() {
   // Reset to defaults (footer)
   document.getElementById('resetBtn')?.addEventListener('click', async () => {
     const reset = emptySettings();
+    const resetGlobal = stateIsGlobal; // what was on screen when the button was pressed is what is reset (and what the message says)
     await commit(reset, { removeStorage: true });
-    showToast(isGlobal ? i18n.t('toastResetGlobal') : i18n.t('toastResetSite'));
+    showToast(resetGlobal ? i18n.t('toastResetGlobal') : i18n.t('toastResetSite'));
   });
 
   // Live Barrier Diagnosis Fetch
@@ -1044,11 +1174,12 @@ async function runPopup() {
       (async () => {
         const current = await storage.get([GLOBAL_MODE_KEY, globalKey]);
         isGlobal = current[GLOBAL_MODE_KEY] === true;
-        activeIsGlobal = isGlobal;
         const data = isGlobal ? current : (storageKey ? await storage.get([storageKey], siteArea) : {});
         state = resolveSettings(data, hostname, isGlobal);
+        stateIsGlobal = isGlobal;
         activeState = state;
-        render(state, toggleMap, isGlobal, hostname);
+        activeIsGlobal = isGlobal;
+        render(state, toggleMap, stateIsGlobal, hostname);
       })().catch(() => {});
     });
   }

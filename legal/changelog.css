@@ -15,56 +15,56 @@ html[data-doc-lang="tr"] .cl-en {
   display: none;
 }
 
-/* The colours are the popup's own (popup.css), value for value: the card surfaces and borders, the emerald "active" signal, the indigo accent,
-   amber and rose. css-tests compares every one of them with popup.css, so this page cannot drift away from the popup's theme. */
+/* The colours are the popup's own (popup.css), value for value: the card surfaces and lines, the green "on" signal, the logo's blue, amber and red.
+   css-tests compares every one of them with popup.css, so this page cannot drift away from the popup's theme. */
 [data-theme="dark"] {
-  --cl-card-bg: rgba(14, 19, 31, 0.78); /* --core-bg */
-  --cl-card-hover: rgba(20, 28, 46, 0.90); /* --core-bg-hover */
-  --cl-card-border: rgba(255, 255, 255, 0.08); /* --core-border */
-  --cl-card-border-hover: rgba(99, 102, 241, 0.38); /* --core-border-hover */
-  --cl-card-latest-border: rgba(16, 185, 129, 0.30); /* --active-shell-border */
+  --cl-card-bg: #161616; /* --card */
+  --cl-card-hover: #1b1b1b; /* --card-hover */
+  --cl-card-border: rgba(255, 255, 255, 0.08); /* --line */
+  --cl-card-border-hover: rgba(255, 255, 255, 0.16); /* --line-strong */
+  --cl-card-latest-border: rgba(16, 185, 129, 0.3); /* the "on" colour at 30 % */
   --cl-new: #10b981; /* --success-text */
-  --cl-new-bg: rgba(16, 185, 129, 0.12); /* --success-pill-bg */
-  --cl-changed: #818cf8; /* --accent-text */
-  --cl-changed-bg: rgba(99, 102, 241, 0.12); /* the accent pill */
-  --cl-removed: #a3b0c4; /* --text-secondary */
-  --cl-removed-bg: rgba(148, 163, 184, 0.14);
-  --cl-fixed: #f59e0b; /* --warning-text */
-  --cl-fixed-bg: rgba(245, 158, 11, 0.12); /* --warning-pill-bg */
-  --cl-security: #f43f5e; /* --danger */
-  --cl-security-bg: rgba(244, 63, 94, 0.12);
+  --cl-new-bg: rgba(16, 185, 129, 0.12); /* the "on" colour at 12 % */
+  --cl-changed: #60a5ff; /* --brand-text */
+  --cl-changed-bg: rgba(29, 95, 240, 0.14); /* the brand blue at 14 % */
+  --cl-removed: #a1a2a7; /* --text-secondary */
+  --cl-removed-bg: rgba(161, 162, 167, 0.14);
+  --cl-fixed: #f6b94a; /* --warning-text */
+  --cl-fixed-bg: rgba(245, 158, 11, 0.1); /* the warning colour at 10 % */
+  --cl-security: #fb7185; /* --danger */
+  --cl-security-bg: rgba(251, 113, 133, 0.12); /* the danger colour at 12 % */
   --cl-latest: #10b981; /* --success-text */
-  --cl-latest-bg: rgba(16, 185, 129, 0.12); /* --success-pill-bg */
-  --cl-notice-bg: rgba(245, 158, 11, 0.12); /* --warning-pill-bg */
-  --cl-notice-line: #f59e0b; /* --warning */
-  --cl-accent: #818cf8; /* --accent-text */
-  --cl-accent-bg: rgba(99, 102, 241, 0.12); /* the accent pill */
-  --cl-highlight: rgba(255, 255, 255, 0.10); /* --core-highlight */
+  --cl-latest-bg: rgba(16, 185, 129, 0.12); /* the "on" colour at 12 % */
+  --cl-notice-bg: rgba(245, 158, 11, 0.08); /* the warning colour at 8 % */
+  --cl-notice-line: #f59e0b; /* the warning colour */
+  --cl-accent: #60a5ff; /* --brand-text */
+  --cl-accent-bg: rgba(29, 95, 240, 0.14); /* the brand blue at 14 % */
+  --cl-highlight: rgba(255, 255, 255, 0); /* flat: no specular line */
 }
 
 [data-theme="light"] {
-  --cl-card-bg: rgba(255, 255, 255, 0.88); /* --core-bg */
-  --cl-card-hover: rgba(255, 255, 255, 0.98); /* --core-bg-hover */
-  --cl-card-border: rgba(0, 0, 0, 0.08); /* --core-border */
-  --cl-card-border-hover: rgba(99, 102, 241, 0.35); /* --core-border-hover */
-  --cl-card-latest-border: rgba(16, 185, 129, 0.32); /* --active-shell-border */
+  --cl-card-bg: #ffffff; /* --card */
+  --cl-card-hover: #fafafa; /* --card-hover */
+  --cl-card-border: rgba(13, 13, 13, 0.09); /* --line */
+  --cl-card-border-hover: rgba(13, 13, 13, 0.2); /* --line-strong */
+  --cl-card-latest-border: rgba(5, 150, 105, 0.3); /* the "on" colour at 30 % */
   --cl-new: #047857; /* --success-text */
-  --cl-new-bg: rgba(5, 150, 105, 0.10); /* --success-pill-bg */
-  --cl-changed: #4f46e5; /* --accent-text */
-  --cl-changed-bg: rgba(99, 102, 241, 0.12); /* the accent pill */
-  --cl-removed: #475569; /* --text-secondary */
-  --cl-removed-bg: rgba(100, 116, 139, 0.12);
-  --cl-fixed: #92400e; /* --warning-text */
-  --cl-fixed-bg: rgba(217, 119, 6, 0.10); /* --warning-pill-bg */
-  --cl-security: #be123c; /* --danger-secondary (the text), --danger (the tint) */
-  --cl-security-bg: rgba(217, 22, 63, 0.10);
+  --cl-new-bg: rgba(5, 150, 105, 0.12); /* the "on" colour at 12 % */
+  --cl-changed: #1a56e0; /* --brand-text */
+  --cl-changed-bg: rgba(29, 95, 240, 0.1); /* the brand blue at 10 % */
+  --cl-removed: #55565c; /* --text-secondary */
+  --cl-removed-bg: rgba(85, 86, 92, 0.12);
+  --cl-fixed: #854d0e; /* --warning-text */
+  --cl-fixed-bg: rgba(202, 138, 4, 0.1); /* the warning colour at 10 % */
+  --cl-security: #be123c; /* --danger */
+  --cl-security-bg: rgba(190, 18, 60, 0.1); /* the danger colour at 10 % */
   --cl-latest: #047857; /* --success-text */
-  --cl-latest-bg: rgba(5, 150, 105, 0.10); /* --success-pill-bg */
-  --cl-notice-bg: rgba(217, 119, 6, 0.10); /* --warning-pill-bg */
-  --cl-notice-line: #d97706; /* --warning */
-  --cl-accent: #4f46e5; /* --accent-text */
-  --cl-accent-bg: rgba(99, 102, 241, 0.12); /* the accent pill */
-  --cl-highlight: rgba(255, 255, 255, 0.90); /* --core-highlight */
+  --cl-latest-bg: rgba(5, 150, 105, 0.12); /* the "on" colour at 12 % */
+  --cl-notice-bg: rgba(202, 138, 4, 0.08); /* the warning colour at 8 % */
+  --cl-notice-line: #ca8a04; /* the warning colour */
+  --cl-accent: #1a56e0; /* --brand-text */
+  --cl-accent-bg: rgba(29, 95, 240, 0.1); /* the brand blue at 10 % */
+  --cl-highlight: rgba(255, 255, 255, 0); /* flat: no specular line */
 }
 
 .doc {
@@ -109,7 +109,7 @@ html[data-doc-lang="tr"] .cl-en {
 .cl-head h1 {
   margin: 0;
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -133,7 +133,7 @@ html[data-doc-lang="tr"] .cl-en {
   align-items: center;
   gap: 5px;
   padding: 5px 10px;
-  border-radius: 8px;
+  border-radius: 9999px;
   background: var(--cl-card-bg);
   border: 1px solid var(--cl-card-border);
   color: var(--text);
@@ -153,13 +153,13 @@ html[data-doc-lang="tr"] .cl-en {
   gap: 2px;
   background: var(--row);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 9999px;
 }
 
 .cl-lang {
   appearance: none;
   border: 0;
-  border-radius: 6px;
+  border-radius: 9999px;
   background: transparent;
   color: var(--text-2);
   cursor: pointer;
@@ -235,7 +235,7 @@ html[data-doc-lang="tr"] .cl-en {
 
 /* ───── Double-Bezel Collapsible Version Cards ───── */
 .cl-card {
-  border-radius: 12px;
+  border-radius: 18px;
   background: var(--cl-card-bg);
   border: 1px solid var(--cl-card-border);
   box-shadow: inset 0 1px 0 var(--cl-highlight);
@@ -274,7 +274,7 @@ html[data-doc-lang="tr"] .cl-en {
 .cl-card-head:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
-  border-radius: 11px;
+  border-radius: 17px;
 }
 
 .cl-card-top {

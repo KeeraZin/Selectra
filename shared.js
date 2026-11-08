@@ -219,9 +219,109 @@
     return !h.includes('.'); // single-label intranet names
   }
 
+  // The captcha, payment and sign-in addresses listed in manifest.json exclude_matches: neither content scripts nor page screenshots run on them.
+  const EXCLUDED_MATCH_PATTERNS = [
+    'https://challenges.cloudflare.com/*',
+    'https://*.hcaptcha.com/*',
+    'https://www.google.com/recaptcha/*',
+    'https://www.recaptcha.net/recaptcha/*',
+    'https://*.arkoselabs.com/*',
+    'https://*.funcaptcha.com/*',
+    'https://*.stripe.com/*',
+    'https://*.stripe.network/*',
+    'https://*.paypal.com/*',
+    'https://pay.google.com/*',
+    'https://payments.google.com/*',
+    'https://*.adyen.com/*',
+    'https://*.braintreegateway.com/*',
+    'https://accounts.google.com/*',
+    'https://login.microsoftonline.com/*',
+    'https://login.live.com/*',
+    'https://appleid.apple.com/*'
+  ];
+
+  const EXCLUDED_MATCH_REGEXES = EXCLUDED_MATCH_PATTERNS.map((pattern) => {
+    const [, scheme, host, rest] = pattern.match(/^(\*|https?):\/\/([^/]*)(\/.*)$/);
+    const esc = (s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+    const hostRe = host === '*' ? '[^/]*' : host.startsWith('*.') ? `(?:[^/]*\\.)?${esc(host.slice(2))}` : esc(host);
+    return new RegExp(`^${scheme === '*' ? 'https?' : scheme}://${hostRe}${rest.split('*').map(esc).join('.*')}$`, 'i');
+  });
+
+  /** True for the captcha, payment and sign-in addresses listed in manifest.json exclude_matches. */
+  function isExcludedSensitiveUrl(url) {
+    if (typeof url !== 'string' || !url) return false;
+    try {
+      const normalized = new URL(url).href;
+      return EXCLUDED_MATCH_REGEXES.some((re) => re.test(normalized));
+    } catch {
+      return false;
+    }
+  }
+
+  // ─── The page screenshot's judgement calls ───
+  // Pure: the geometry goes in, the decision comes out. content.js does the measuring and acts on the answer; test/shared-tests.js pins the rules down.
+
+  /**
+   * Which of the scrolling elements found under the sample points is the app's main pane: its index in `candidates`, or -1 when none qualifies.
+   * candidates: [{ rect: { left, top, width, height }, scrollSpan, atCenter }] (CSS px; scrollSpan = how far it can be scrolled; atCenter = it lies under
+   * the middle of the window). A pane has to be tall (at least 40 % of the window) and not tiny (at least 8 % of its area): a code block or a menu list is
+   * no pane, a pane that only has a third of the window's width (side panels open, a half-width window) is one. The biggest wins; of two that differ by less
+   * than 2 % the one with more to scroll; the one in the middle of the window wins unless something at least twice as big lies elsewhere.
+   */
+  function pickScrollPane(candidates, viewport) {
+    const vw = Number(viewport && viewport.width) || 0;
+    const vh = Number(viewport && viewport.height) || 0;
+    if (!Array.isArray(candidates) || vw <= 0 || vh <= 0) return -1;
+    const eligible = [];
+    candidates.forEach((c, index) => {
+      const r = c && c.rect;
+      if (!r || !(c.scrollSpan > 20)) return;
+      const area = r.width * r.height;
+      if (!(r.height >= vh * 0.4) || !(area >= vw * vh * 0.08)) return;
+      eligible.push({ index, area, span: c.scrollSpan, atCenter: c.atCenter === true });
+    });
+    if (!eligible.length) return -1;
+    const better = (a, b) => ((a.area > b.area * 1.02 || (Math.abs(a.area - b.area) <= b.area * 0.02 && a.span > b.span)) ? a : b);
+    const best = eligible.reduce(better);
+    const inMiddle = eligible.filter((e) => e.atCenter);
+    if (inMiddle.length) {
+      const middle = inMiddle.reduce(better);
+      if (middle.area * 2 >= best.area) return middle.index;
+    }
+    return best.index;
+  }
+
+  /**
+   * What a floating element (one that stays where it is while the page scrolls under it) is, seen from the area that is photographed (`aperture`: the
+   * window, or the pane that scrolls by itself), in CSS px of the window:
+   *   'header'  anchored to the top (a bar, the buttons in it): belongs to the first picture, gets out of the way afterwards
+   *   'side'    a tall menu at a side edge (a fixed docs menu, a drawer): the same
+   *   'dock'    a bar near the bottom, wider than it is tall or spanning most of the area (cookie bar, composer, prompt pill): hidden while the pictures are taken, shown once at the very end
+   *   'widget'  anything else that floats (a "scroll to bottom" button, a chat bubble, a toast): it would hover over the text, so it is hidden
+   *   'skip'    outside the area, or too big to be anything but the page itself (a veil, a modal): left alone
+   */
+  function classifyFloating(rect, aperture) {
+    const aw = aperture.right - aperture.left;
+    const ah = aperture.bottom - aperture.top;
+    const w = rect.right - rect.left;
+    const h = rect.bottom - rect.top;
+    if (!(w > 0 && h > 0 && aw > 0 && ah > 0)) return 'skip';
+    const overX = Math.min(rect.right, aperture.right) - Math.max(rect.left, aperture.left);
+    const overY = Math.min(rect.bottom, aperture.bottom) - Math.max(rect.top, aperture.top);
+    if (overX <= 2 || overY <= 2) return 'skip';
+    if (w * h > aw * ah * 0.65) return 'skip';
+    if (rect.top <= aperture.top + 24 && rect.bottom <= aperture.top + ah * 0.35) return 'header';
+    if (h >= ah * 0.55 && w <= aw * 0.45 && (rect.left <= aperture.left + 24 || rect.right >= aperture.right - 24)) return 'side';
+    if (h > ah * 0.45) return 'skip';
+    if (rect.bottom >= aperture.bottom - 120 && rect.top >= aperture.bottom - Math.max(220, ah * 0.45) && w >= Math.min(220, aw * 0.22) && (w > h * 1.8 || w >= aw * 0.6)) return 'dock';
+    return 'widget';
+  }
+
   return {
     FEATURE_KEYS, UNLOCK_KEYS, TOP_ONLY_KEYS, GLOBAL_SETTINGS_KEY, GLOBAL_MODE_KEY,
+    EXCLUDED_MATCH_PATTERNS,
     emptySettings, normalizeSettings, countEnabled, siteKey, resolveSettings, withoutTopOnly,
-    getBaseDomain, isPrivateHost
+    getBaseDomain, isPrivateHost, isExcludedSensitiveUrl,
+    pickScrollPane, classifyFloating
   };
 });

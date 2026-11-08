@@ -29,7 +29,6 @@
   };
 
   const nativePreventDefault = Event.prototype.preventDefault;
-  const nativeStopPropagation = Event.prototype.stopPropagation;
   const nativeStopImmediatePropagation = Event.prototype.stopImmediatePropagation;
   const nativeAddEventListener = EventTarget.prototype.addEventListener;
   const nativeRemoveEventListener = EventTarget.prototype.removeEventListener;
@@ -48,6 +47,11 @@
   const nativeConsoleClear = console.clear;
   const nativePrint = window.print;
   const nativeAttachShadow = Element.prototype.attachShadow;
+  const nativeClosest = Element.prototype.closest;
+  let pagePrint = null; // the page's own window.print while the native one stands in for it (Print Unlock)
+  // A form's controls show up as properties of the form: with a control named "closest", form.closest is that control and not a function (and a page can replace the method too).
+  // The element is asked with the native method, and a failure is "no match", so that the page's own call of preventDefault() never throws because of this script.
+  const closestOf = (element, selector) => { try { return nativeClosest.call(element, selector); } catch { return null; } };
 
   // ─── Primordials ───
   // The calls this script depends on are taken now, before any page script can replace them.
@@ -102,7 +106,7 @@
   // document/window/body). Page-wide handlers are ignored for that one case, and only on plain text: a slider, a menu or a
   // drag handle attaches its mousedown handler to its own element, so those keep working untouched.
   const INTERACTIVE_SELECTOR = 'a[href], button, input, select, textarea, label, summary, option, canvas, video, audio, iframe, embed, object, svg, [contenteditable]:not([contenteditable="false"]), [draggable="true"], [role="button"], [role="slider"], [role="scrollbar"], [role="tab"], [role="menuitem"], [role="textbox"], [role="spinbutton"], [role="separator"], [role="option"], [role="switch"], [role="checkbox"], [role="combobox"]';
-  const isPlainTextTarget = (target) => target instanceof Element && !target.closest(INTERACTIVE_SELECTOR);
+  const isPlainTextTarget = (target) => target instanceof Element && closestOf(target, INTERACTIVE_SELECTOR) === null;
   const isGlobalTarget = (target) => target === window || target === document || target === document.documentElement || target === document.body;
   const cancelsSelection = (event) => state.copy && !!event && event.button === 0 && isPlainTextTarget(event.target);
 
@@ -121,7 +125,7 @@
     return event && event.target instanceof Element ? event.target : null;
   };
   const within = (target, selector) => {
-    try { return !!target && target.closest(selector) !== null; } catch { return false; }
+    return !!target && closestOf(target, selector) !== null;
   };
   const DEV_KEYS = ['i', 'j', 'c', 'k', 'e'];
   const shortcutKind = (event) => {
@@ -197,7 +201,7 @@
       const key = String(this.key || '').toLowerCase();
       if (['arrowdown', 'arrowup', 'pagedown', 'pageup', 'home', 'end', ' '].includes(key)) {
         const target = this.target;
-        if (!(target instanceof Element && target.closest('input, textarea, select, [contenteditable="true"]'))) {
+        if (!(target instanceof Element && closestOf(target, 'input, textarea, select, [contenteditable]:not([contenteditable="false"])'))) {
           return; // Ignore website canceling keyboard scroll
         }
       }
@@ -332,7 +336,7 @@
     // A "Copy link" / "Copy code" button writes its own text through a copy event while some page text happens to be selected: that is the
     // button doing its job, not poisoning. (The focus is on the button after the click; a user's Ctrl+C has it on the page.)
     const active = document.activeElement;
-    if (active && typeof active.closest === 'function' && active.closest('button, [role="button"], a[href], summary')) return false;
+    if (active && closestOf(active, 'button, [role="button"], a[href], summary')) return false;
     if (data === selected) return false;
 
     const lowerData = data.toLowerCase();
@@ -836,7 +840,11 @@
     }
 
     if (state.print && nativePrint) {
+      if (window.print !== nativePrint) pagePrint = window.print; // what the page put there (a blocker): kept, to be given back
       try { window.print = nativePrint; } catch {}
+    } else if (pagePrint) {
+      try { if (window.print === nativePrint) window.print = pagePrint; } catch {} // (not when the page has replaced it again by itself)
+      pagePrint = null;
     }
 
     if (state.alert) enableDialogs();

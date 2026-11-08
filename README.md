@@ -54,7 +54,3 @@ The same files always give the same zip, byte for byte. Each release lists the S
 ## Licence
 
 MIT, see [LICENSE](LICENSE). The bundled fonts are under the SIL Open Font License 1.1 (`fonts/OFL.txt`); the icons come from Feather (MIT) and Lucide (ISC). `legal/licenses.html` lists them.
-
-## Türkçe
-
-Selectra, bazı sitelerin kapattığı sağ tık menüsünü, metin seçimini, kopyalamayı, görsel sürüklemeyi, kaydırmayı ve yazdırmayı geri getiren bir Chrome eklentisidir. Siz açana kadar hiçbir şey çalışmaz; tek bir site için ya da her yerde açabilirsiniz. Sunucusu, analitiği ve hesabı yoktur. Kaynak kodu MIT lisanslıdır. Sürüm notları [CHANGELOG.md](CHANGELOG.md) dosyasında İngilizce ve Türkçe olarak durur.
